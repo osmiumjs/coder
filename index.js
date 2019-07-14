@@ -18,9 +18,12 @@ function makeWBuffer(int, name, length) {
 	return buf;
 }
 
-function baseXEncode(what, base) {return BaseX(base).encode(Buffer.isBuffer(what) ? what : Buffer.from(what));}
+function baseXEncode(what, base, ascii = false) {return BaseX(base).encode(Buffer.isBuffer(what) ? what : Buffer.from(what, ascii ? 'ascii' : 'utf8'));}
 
-function baseXDecode(what, base, asBuffer = false) {return BaseX(base).decode(what)[asBuffer ? 'asBuffer' : 'toString']();}
+function baseXDecode(what, base, asBuffer = false, ascii = false) {
+	const b = BaseX(base).decode(what);
+	return asBuffer ? b : b.toString(ascii ? 'ascii' : 'utf8');
+}
 
 
 const tools = {
