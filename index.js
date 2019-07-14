@@ -56,8 +56,8 @@ const tools = {
 	bufToFloat     : (buf, offset = 0, be = false) => buf[`readFloat${be ? 'BE' : 'LE'}`](offset),
 	bufToDouble    : (buf, offset = 0, be = false) => buf[`readDouble${be ? 'BE' : 'LE'}`](offset),
 	pad            : (str, z = 8) => str.length < z ? tools.pad('0' + str, z) : str,
-	bufTobinStr    : (buf, offset) => tools.pad(tools.bufToInt8U(buf, offset).toString(2)),
-	binStrToBuf    : (str) => tools.int8UToBuf(parseInt(str, 2))
+	bufToBinFlags  : (buf, offset) => tools.pad(tools.bufToInt8U(buf, offset).toString(2)).split('').map(r => r === '1'),
+	binFlagsToBuf  : (arr) => tools.int8UToBuf(parseInt(oTools.iterate(Array(8).fill(false, 0, 8), (el, idx) => arr[idx] ? 1 : 0, []).join(''), 2))
 };
 
 oTools.iterate(BASE_ALPHABETS, (base, name) => {
@@ -70,7 +70,7 @@ class CoderConst {
 		this.tools = tools;
 		this.type = {
 			UNDEFINED: 0,
-			BINSTR   : 1,
+			BINFLAGS : 1,
 			BOOLF    : 11,
 			BOOLT    : 12,
 			INT8     : 21,
@@ -90,12 +90,16 @@ class CoderConst {
 			STRA16   : 55,
 			STRA32   : 56,
 			CHAR     : 59,
+			BINARY8  : 91,
+			BINARY16 : 92,
+			BINARY32 : 93,
 			OBJECT8  : 101,
 			OBJECT16 : 101,
 			OBJECT32 : 102,
 			ARRAY8   : 111,
 			ARRAY16  : 112,
 			ARRAY32  : 113,
+			DATE     : 121,
 			BIGNUM   : 150,
 			NULL     : 201,
 			NAN      : 202,
@@ -116,15 +120,37 @@ class DataEncoder extends CoderConst {
 		return res;
 	}
 
+	isBinFlags(val) {
+		if (!oTools.isArray(val) || val.length > 8) return false;
+		let ret = true;
+		oTools.iterate(val, (row) => { if (!oTools.isBoolean(row)) ret = false; });
+		return ret;
+	}
+
+	isDate(date) {
+		return date instanceof Date && !isNaN(date.valueOf());
+	}
+
 	auto(val) {
+		if (Buffer.isBuffer(val)) return this.bin(val);
 		if (oTools.isUndefined(val)) return this.undef();
 		if (oTools.isBoolean(val)) return this.bool(val);
+		if (this.isBinFlags(val)) return this.binFlags(val);
 		if (oTools.isNull(val)) return this.nil();
+		if (this.isDate(val)) return this.date(val);
 		if (val instanceof BigNumber || oTools.isFloat(val) || oTools.isNumber(val) || val === Infinity || val === -Infinity) return this.int(val);
 		if (oTools.isString(val)) return this.str(val);
 		if (oTools.isArray(val)) return this.arr(val);
 		if (oTools.isObject(val)) return this.obj(val);
 		return false;
+	}
+
+	date(val) {
+		const int53arr = tools.int53toTwoInt32(val.getTime());
+		return this.make(this.type.DATE, Buffer.concat([
+			tools.int32UToBuf(int53arr[0]),
+			tools.int32UToBuf(int53arr[1])
+		]));
 	}
 
 	nil() {
@@ -141,6 +167,18 @@ class DataEncoder extends CoderConst {
 
 	infinity(negatvie = false) {
 		return this.make(negatvie ? this.type.NINFINITY : this.type.INFINITY);
+	}
+
+	bin(val) {
+		const _bin = (type, len, row) => this.make(type, Buffer.concat([len, row]));
+
+		if (val.length <= 0xff) return _bin(this.type.BINARY8, tools.int8UToBuf(val.length), val);
+		if (val.length <= 0xffff) return _bin(this.type.BINARY16, tools.int16UToBuf(val.length), val);
+		return _bin(this.type.BINARY32, tools.int32UToBuf(val.length), val);
+	}
+
+	binFlags(val) {
+		return this.make(this.type.BINFLAGS, this.tools.binFlagsToBuf(val));
 	}
 
 	obj(val) {
@@ -229,47 +267,85 @@ class DataDecoder extends CoderConst {
 		switch (type) {
 			case this.type.UNDEFINED:
 				return [undefined, 1];
+
 			case this.type.NULL:
 				return [null, 1];
+
 			case this.type.BOOLF:
 				return [false, 1];
+
 			case this.type.BOOLT:
 				return [true, 1];
+
+			case this.type.BINFLAGS:
+				return [tools.bufToBinFlags(msg.subarray(1, 2)), 2];
+
+			case this.type.BINARY8:
+				const bin8len = tools.bufToInt8U(msg, 1) + 2;
+				return [msg.subarray(2, bin8len), bin8len];
+
+			case this.type.BINARY16:
+				const bin16len = tools.bufToInt16U(msg, 1) + 3;
+				return [msg.subarray(3, bin16len), bin16len];
+
+			case this.type.BINARY32:
+				const bin32len = tools.bufToInt32U(msg, 1) + 5;
+				return [msg.subarray(5, bin32len), bin32len];
+
 			case this.type.NINT8:
 			case this.type.INT8:
 				return [tools.bufToInt8U(msg, 1) * (type === this.type.NINT8 ? -1 : 1), 2];
+
 			case this.type.NINT16:
 			case this.type.INT16:
 				return [tools.bufToInt16U(msg, 1) * (type === this.type.NINT16 ? -1 : 1), 3];
+
 			case this.type.NINT32:
 			case this.type.INT32:
 				return [tools.bufToInt32U(msg, 1) * (type === this.type.NINT32 ? -1 : 1), 5];
+
 			case this.type.NINT53:
 			case this.type.INT53:
 				return [tools.twoInt32toInt53([tools.bufToInt32U(msg, 1), tools.bufToInt32U(msg, 5)]) * (type === this.type.NINT53 ? -1 : 1), 9];
+
 			case this.type.FLOAT:
 				return [tools.bufToFloat(msg, 1), 5];
+
 			case this.type.DOUBLE:
 				return [tools.bufToDouble(msg, 1), 9];
+
 			case this.type.STRA8:
 			case this.type.STR8:
 				const str8len = tools.bufToInt8U(msg, 1) + 2;
 				return [msg.subarray(2, str8len).toString(type === this.type.STRA8 ? 'ascii' : 'utf8'), str8len];
+
 			case this.type.STRA16:
 			case this.type.STR16:
 				const str16len = tools.bufToInt16U(msg, 1) + 3;
 				return [msg.subarray(3, str16len).toString(type === this.type.STRA16 ? 'ascii' : 'utf8'), str16len];
+
 			case this.type.STRA32:
 			case this.type.STR32:
 				const str32len = tools.bufToInt32U(msg, 1) + 5;
 				return [msg.subarray(5, str32len).toString(type === this.type.STRA32 ? 'ascii' : 'utf8'), str32len];
+
 			case this.type.CHAR:
 				return [msg.subarray(1, 2).toString('ascii'), 2];
+
 			case this.type.BIGNUM:
 				const bnlen = tools.bufToInt8U(msg, 1) + 2;
 				return [new BigNumber((msg.subarray(2, bnlen)).toString('ascii')), bnlen];
+
 			case this.type.NAN:
 				return [NaN, 1];
+
+			case this.type.INFINITY:
+			case this.type.NINFINITY:
+				return [type === this.type.INFINITY ? Infinity : -Infinity, 1];
+
+			case this.type.DATE:
+				return [new Date(tools.twoInt32toInt53([tools.bufToInt32U(msg, 1), tools.bufToInt32U(msg, 5)])), 9];
+
 			case this.type.ARRAY8:
 			case this.type.ARRAY16:
 			case this.type.ARRAY32:
@@ -281,6 +357,7 @@ class DataDecoder extends CoderConst {
 						return decoded[0];
 					}, []);
 				return [aret, alen];
+
 			case this.type.OBJECT8:
 			case this.type.OBJECT16:
 			case this.type.OBJECT32:
@@ -295,6 +372,7 @@ class DataDecoder extends CoderConst {
 						return val[0];
 					}, {});
 				return [oret, olen];
+
 			default:
 				return [undefined, 0];
 		}
