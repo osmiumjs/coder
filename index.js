@@ -124,7 +124,7 @@ class DataEncoder extends CoderConst {
 	}
 
 	isBinFlags(val) {
-		if (!oTools.isArray(val) || val.length > 8) return false;
+		if (!oTools.isArray(val) || val.length > 8 || val.length < 1) return false;
 		let ret = true;
 		oTools.iterate(val, (row) => { if (!oTools.isBoolean(row)) ret = false; });
 		return ret;
@@ -135,13 +135,12 @@ class DataEncoder extends CoderConst {
 	}
 
 	auto(val) {
+		if (val instanceof BigNumber || oTools.isFloat(val) || oTools.isNumber(val) || val === Infinity || val === -Infinity) return this.int(val);
 		if (Buffer.isBuffer(val)) return this.bin(val);
 		if (oTools.isUndefined(val)) return this.undef();
 		if (oTools.isBoolean(val)) return this.bool(val);
-		if (this.isBinFlags(val)) return this.binFlags(val);
 		if (oTools.isNull(val)) return this.nil();
 		if (this.isDate(val)) return this.date(val);
-		if (val instanceof BigNumber || oTools.isFloat(val) || oTools.isNumber(val) || val === Infinity || val === -Infinity) return this.int(val);
 		if (oTools.isString(val)) return this.str(val);
 		if (oTools.isArray(val)) return this.arr(val);
 		if (oTools.isObject(val)) return this.obj(val);
