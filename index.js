@@ -110,6 +110,23 @@ class CoderConst {
 			NINFINITY: 204
 		};
 	}
+
+	isBigNumber(val) {
+		if (!oTools.isObject(val)) return false;
+		if (oTools.isUndefined(val.s) || oTools.isUndefined(val.e) || !oTools.isArray(val.c)) return false;
+		return val.toFixed && val.toPrecision && val.exponentiatedBy && val.minus;
+	}
+
+	isDate(date) {
+		return date instanceof Date && !isNaN(date.valueOf());
+	}
+
+	isBinFlags(val) {
+		if (!oTools.isArray(val) || val.length > 8 || val.length < 1) return false;
+		let ret = true;
+		oTools.iterate(val, (row) => { if (!oTools.isBoolean(row)) ret = false; });
+		return ret;
+	}
 }
 
 class DataEncoder extends CoderConst {
@@ -123,19 +140,8 @@ class DataEncoder extends CoderConst {
 		return res;
 	}
 
-	isBinFlags(val) {
-		if (!oTools.isArray(val) || val.length > 8 || val.length < 1) return false;
-		let ret = true;
-		oTools.iterate(val, (row) => { if (!oTools.isBoolean(row)) ret = false; });
-		return ret;
-	}
-
-	isDate(date) {
-		return date instanceof Date && !isNaN(date.valueOf());
-	}
-
 	auto(val) {
-		if (val instanceof BigNumber || oTools.isFloat(val) || oTools.isNumber(val) || val === Infinity || val === -Infinity) return this.int(val);
+		if (this.isBigNumber(val) || oTools.isFloat(val) || oTools.isNumber(val) || val === Infinity || val === -Infinity) return this.int(val);
 		if (Buffer.isBuffer(val)) return this.bin(val);
 		if (oTools.isUndefined(val)) return this.undef();
 		if (oTools.isBoolean(val)) return this.bool(val);
@@ -234,7 +240,7 @@ class DataEncoder extends CoderConst {
 		if (isNaN(val)) return this.nan();
 		if (val === Infinity) return this.infinity();
 		if (val === -Infinity) return this.infinity(true);
-		if (val instanceof BigNumber) return _toBigNum(val);
+		if (this.isBigNumber(val)) return _toBigNum(val);
 		if (oTools.isString(val)) return _toBigNum(new BigNumber(val));
 		if (oTools.isFloat(val)) return this.make(this.type.DOUBLE, tools.doubleToBuf(val));
 		let negative = false;
