@@ -127,6 +127,10 @@ class CoderConst {
 		oTools.iterate(val, (row) => { if (!oTools.isBoolean(row)) ret = false; });
 		return ret;
 	}
+
+	isBuffer(val) {
+		return Buffer.isBuffer(val) || (val && val.constructor && oTools.isFunction(val.constructor.toString) && !val.constructor.toString().indexOf('function Buffer'));
+	}
 }
 
 class DataEncoder extends CoderConst {
@@ -142,7 +146,7 @@ class DataEncoder extends CoderConst {
 
 	auto(val) {
 		if (this.isBigNumber(val) || oTools.isFloat(val) || oTools.isNumber(val) || val === Infinity || val === -Infinity) return this.int(val);
-		if (Buffer.isBuffer(val)) return this.bin(val);
+		if (this.isBuffer(val)) return this.bin(Buffer.from(val));
 		if (oTools.isUndefined(val)) return this.undef();
 		if (oTools.isBoolean(val)) return this.bool(val);
 		if (oTools.isNull(val)) return this.nil();
@@ -269,8 +273,12 @@ class DataDecoder extends CoderConst {
 		return this.decodeWLen(msg)[0];
 	}
 
+	extract(msg, start, end) {
+		return Buffer.from(msg.subarray(start, end));
+	}
+
 	decodeWLen(msg) {
-		if (!Buffer.isBuffer(msg) || msg.length === 0) return undefined;
+		msg = Buffer.from(msg);
 		const type = tools.bufToInt8U(msg);
 		switch (type) {
 			case this.type.UNDEFINED:
@@ -286,19 +294,19 @@ class DataDecoder extends CoderConst {
 				return [true, 1];
 
 			case this.type.BINFLAGS:
-				return [tools.bufToBinFlags(msg.subarray(1, 2)), 2];
+				return [tools.bufToBinFlags(this.extract(msg, 1, 2)), 2];
 
 			case this.type.BINARY8:
 				const bin8len = tools.bufToInt8U(msg, 1) + 2;
-				return [msg.subarray(2, bin8len), bin8len];
+				return [this.extract(msg, 2, bin8len), bin8len];
 
 			case this.type.BINARY16:
 				const bin16len = tools.bufToInt16U(msg, 1) + 3;
-				return [msg.subarray(3, bin16len), bin16len];
+				return [this.extract(msg, 3, bin16len), bin16len];
 
 			case this.type.BINARY32:
 				const bin32len = tools.bufToInt32U(msg, 1) + 5;
-				return [msg.subarray(5, bin32len), bin32len];
+				return [this.extract(msg, 5, bin32len), bin32len];
 
 			case this.type.NINT8:
 			case this.type.INT8:
@@ -325,24 +333,24 @@ class DataDecoder extends CoderConst {
 			case this.type.STRA8:
 			case this.type.STR8:
 				const str8len = tools.bufToInt8U(msg, 1) + 2;
-				return [msg.subarray(2, str8len).toString(type === this.type.STRA8 ? 'ascii' : 'utf8'), str8len];
+				return [this.extract(msg, 2, str8len).toString(type === this.type.STRA8 ? 'ascii' : 'utf8'), str8len];
 
 			case this.type.STRA16:
 			case this.type.STR16:
 				const str16len = tools.bufToInt16U(msg, 1) + 3;
-				return [msg.subarray(3, str16len).toString(type === this.type.STRA16 ? 'ascii' : 'utf8'), str16len];
+				return [this.extract(msg, 3, str16len).toString(type === this.type.STRA16 ? 'ascii' : 'utf8'), str16len];
 
 			case this.type.STRA32:
 			case this.type.STR32:
 				const str32len = tools.bufToInt32U(msg, 1) + 5;
-				return [msg.subarray(5, str32len).toString(type === this.type.STRA32 ? 'ascii' : 'utf8'), str32len];
+				return [this.extract(msg, 5, str32len).toString(type === this.type.STRA32 ? 'ascii' : 'utf8'), str32len];
 
 			case this.type.CHAR:
-				return [msg.subarray(1, 2).toString('ascii'), 2];
+				return [this.extract(msg, 1, 2).toString('ascii'), 2];
 
 			case this.type.BIGNUM:
 				const bnlen = tools.bufToInt8U(msg, 1) + 2;
-				return [new BigNumber((msg.subarray(2, bnlen)).toString('ascii')), bnlen];
+				return [new BigNumber((this.extract(msg, 2, bnlen)).toString('ascii')), bnlen];
 
 			case this.type.NAN:
 				return [NaN, 1];
@@ -360,7 +368,7 @@ class DataDecoder extends CoderConst {
 				let alen = 1 + ((type === this.type.ARRAY8) ? 1 : type === this.type.ARRAY16 ? 2 : 4);
 				const aret = oTools.iterate(
 					tools[(type === this.type.ARRAY8) ? 'bufToInt8U' : type === this.type.ARRAY16 ? 'bufToInt16U' : 'bufToInt32U'](msg, 1), () => {
-						const decoded = this.decodeWLen(msg.subarray(alen, msg.length));
+						const decoded = this.decodeWLen(this.extract(msg, alen, msg.length));
 						alen += decoded[1];
 						return decoded[0];
 					}, []);
@@ -372,9 +380,9 @@ class DataDecoder extends CoderConst {
 				let olen = 1 + ((type === this.type.OBJECT8) ? 1 : type === this.type.OBJECT16 ? 2 : 4);
 				const oret = oTools.iterate(
 					tools[(type === this.type.OBJECT8) ? 'bufToInt8U' : type === this.type.OBJECT16 ? 'bufToInt16U' : 'bufToInt32U'](msg, 1), (_, __, iter) => {
-						const key = this.decodeWLen(msg.subarray(olen, msg.length));
+						const key = this.decodeWLen(this.extract(msg, olen, msg.length));
 						olen += key[1];
-						const val = this.decodeWLen(msg.subarray(olen, msg.length));
+						const val = this.decodeWLen(this.extract(msg, olen, msg.length));
 						olen += val[1];
 						iter.key(key[0]);
 						return val[0];
