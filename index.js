@@ -179,7 +179,6 @@ class DataEncoder extends CoderConst {
 
 	auto(val) {
 		const custom = oTools.iterate(this.customHandlers, (h) => h.detector(val) ? this.custom(h, val) : undefined, false);
-		console.log('MQ', custom);
 		if (custom) return custom;
 
 		if (this.isBigNumber(val) || oTools.isFloat(val) || oTools.isNumber(val) || val === Infinity || val === -Infinity) return this.int(val);
