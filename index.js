@@ -72,42 +72,51 @@ class CoderConst {
 	constructor() {
 		this.tools = tools;
 		this.type = {
-			UNDEFINED: 0,
-			BINFLAGS : 1,
-			BOOLF    : 11,
-			BOOLT    : 12,
-			INT8     : 21,
-			INT16    : 22,
-			INT32    : 23,
-			INT53    : 24,
-			NINT8    : 31,
-			NINT16   : 32,
-			NINT32   : 33,
-			NINT53   : 34,
-			FLOAT    : 41,
-			DOUBLE   : 42,
-			STR8     : 51,
-			STR16    : 52,
-			STR32    : 53,
-			STRA8    : 54,
-			STRA16   : 55,
-			STRA32   : 56,
-			CHAR     : 59,
-			BINARY8  : 91,
-			BINARY16 : 92,
-			BINARY32 : 93,
-			OBJECT8  : 101,
-			OBJECT16 : 101,
-			OBJECT32 : 102,
-			ARRAY8   : 111,
-			ARRAY16  : 112,
-			ARRAY32  : 113,
-			DATE     : 121,
-			BIGNUM   : 150,
-			NULL     : 201,
-			NAN      : 202,
-			INFINITY : 203,
-			NINFINITY: 204
+			UNDEFINED  : 0,
+			BINFLAGS   : 1,
+			BOOLF      : 11,
+			BOOLT      : 12,
+			INT8       : 21,
+			INT16      : 22,
+			INT32      : 23,
+			INT53      : 24,
+			NINT8      : 31,
+			NINT16     : 32,
+			NINT32     : 33,
+			NINT53     : 34,
+			FLOAT      : 41,
+			DOUBLE     : 42,
+			STR8       : 51,
+			STR16      : 52,
+			STR32      : 53,
+			STRA8      : 54,
+			STRA16     : 55,
+			STRA32     : 56,
+			CHAR       : 59,
+			BINARY8    : 91,
+			BINARY16   : 92,
+			BINARY32   : 93,
+			OBJECT8    : 101,
+			OBJECT16   : 101,
+			OBJECT32   : 102,
+			ARRAY8     : 111,
+			ARRAY16    : 112,
+			ARRAY32    : 113,
+			DATE       : 121,
+			BIGNUM     : 150,
+			NULL       : 201,
+			NAN        : 202,
+			INFINITY   : 203,
+			NINFINITY  : 204,
+			CUSTOM8_8  : 211,
+			CUSTOM8_16 : 212,
+			CUSTOM8_32 : 213,
+			CUSTOM16_8 : 214,
+			CUSTOM16_16: 215,
+			CUSTOM16_32: 216,
+			CUSTOM32_8 : 217,
+			CUSTOM32_16: 218,
+			CUSTOM32_32: 219
 		};
 	}
 
@@ -136,6 +145,7 @@ class CoderConst {
 class DataEncoder extends CoderConst {
 	constructor() {
 		super();
+		this.customHandlers = [];
 	}
 
 	make(type, val) {
@@ -144,7 +154,34 @@ class DataEncoder extends CoderConst {
 		return res;
 	}
 
+	registerCustom(id, encode, detector) {
+		this.customHandlers.push({id, encode, detector});
+	}
+
+	custom(handler, val) {
+		const _custom = (type, id) => {
+			const msg = Buffer.from(handler.encode(val));
+			const len = msg.length <= 0xff ? 8 : msg.length <= 0xffff ? 16 : msg.length <= 0xffffffff ? 32 : false;
+			if (len === false) return;
+			let cLen = tools[msg.length <= 0xff ? 'int8UToBuf' : msg.length <= 0xffff ? 'int16UToBuf' : 'int32UToBuf'](msg.length);
+
+			return this.make(this.type[`CUSTOM${type}_${len}`], Buffer.concat([id, cLen, msg]));
+		};
+
+		if (oTools.isString(handler)) {
+			handler = oTools.iterate(this.customHandlers, (el) => el.id === handler ? el : undefined, false);
+		}
+		if (handler.id <= 0xff) return _custom(8, tools.int8UToBuf(handler.id));
+		if (handler.id <= 0xffff) return _custom(16, tools.int16UToBuf(handler.id));
+		if (handler.id <= 0xffffffff) return _custom(32, tools.int32UToBuf(handler.id));
+		return undefined;
+	}
+
 	auto(val) {
+		const custom = oTools.iterate(this.customHandlers, (h) => h.detector(val) ? this.custom(h, val) : undefined, false);
+		console.log('MQ', custom);
+		if (custom) return custom;
+
 		if (this.isBigNumber(val) || oTools.isFloat(val) || oTools.isNumber(val) || val === Infinity || val === -Infinity) return this.int(val);
 		if (this.isBuffer(val)) return this.bin(Buffer.from(val));
 		if (oTools.isUndefined(val)) return this.undef();
@@ -267,6 +304,7 @@ class DataEncoder extends CoderConst {
 class DataDecoder extends CoderConst {
 	constructor() {
 		super();
+		this.customHandlers = [];
 	}
 
 	decode(msg) {
@@ -275,6 +313,10 @@ class DataDecoder extends CoderConst {
 
 	extract(msg, start, end) {
 		return Buffer.from(msg.subarray(start, end));
+	}
+
+	registerCustom(id, decode) {
+		this.customHandlers.push({id, decode});
 	}
 
 	decodeWLen(msg) {
@@ -389,14 +431,42 @@ class DataDecoder extends CoderConst {
 					}, {});
 				return [oret, olen];
 
+			case this.type.CUSTOM8_8:
+			case this.type.CUSTOM8_16:
+			case this.type.CUSTOM8_32:
+			case this.type.CUSTOM16_8:
+			case this.type.CUSTOM16_16:
+			case this.type.CUSTOM16_32:
+			case this.type.CUSTOM32_8:
+			case this.type.CUSTOM32_16:
+			case this.type.CUSTOM32_32:
+				let cType = oTools.iterate(this.type, (val, idx) => val === type ? idx : undefined, false);
+				let cIdLen = !!~cType.indexOf('CUSTOM8') ? 1 : !!~cType.indexOf('CUSTOM16') ? 2 : 4;
+				let cDataLen = !!~cType.indexOf('_8') ? 1 : !!~cType.indexOf('_16') ? 2 : 4;
+				let cId = tools[(!!~cType.indexOf('CUSTOM8')) ? 'bufToInt8U' : !!~cType.indexOf('CUSTOM16') ? 'bufToInt16U' : 'bufToInt32U'](msg, 1);
+				let cLen = tools[(!!~cType.indexOf('_8')) ? 'bufToInt8U' : !!~cType.indexOf('_16') ? 'bufToInt16U' : 'bufToInt32U'](msg, 1 + cIdLen);
+				let cMsg = this.extract(msg, 1 + cIdLen + cDataLen, 1 + cIdLen + cDataLen + cLen);
+				return [oTools.iterate(this.customHandlers, (row) => row.id === cId ? row.decode(cMsg) : undefined, false), 1 + cIdLen + cDataLen + cLen];
+
 			default:
 				return [undefined, 0];
 		}
 	}
 }
 
+const DataCoder = {
+	decoder: new DataDecoder(),
+	encoder: new DataEncoder(),
+	tools,
+	use(what) {
+		DataCoder.decoder.registerCustom(what.id, what.decode);
+		DataCoder.encoder.registerCustom(what.id, what.encode, what.detector);
+	}
+};
+
 module.exports = {
 	DataEncoder,
 	DataDecoder,
+	DataCoder,
 	tools
 };
