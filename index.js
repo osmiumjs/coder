@@ -154,7 +154,7 @@ class DataEncoder extends CoderConst {
 			if (!oTools.isUndefined(val)) res = Buffer.concat([res, val]);
 			return res;
 		} catch (e) {
-			throw Error('Decoder error: make');
+			throw Error('Encoder error: make');
 		}
 	}
 
@@ -182,7 +182,7 @@ class DataEncoder extends CoderConst {
 			return undefined;
 
 		} catch (e) {
-			throw Error(`Decoder error: custom [${handler.id}]`);
+			throw Error(`Encoder error: custom [${handler.id}]`);
 		}
 	}
 
@@ -200,7 +200,7 @@ class DataEncoder extends CoderConst {
 		if (oTools.isArray(val)) return this.arr(val);
 		if (oTools.isObject(val)) return this.obj(val);
 
-		throw Error('Decoder error: unknown type');
+		throw Error('Encoder error: unknown type');
 	}
 
 	encode(val) {
@@ -215,7 +215,7 @@ class DataEncoder extends CoderConst {
 				tools.int32UToBuf(int53arr[1])
 			]));
 		} catch (e) {
-			throw Error('Decoder error: date');
+			throw Error('Encoder error: date');
 		}
 	}
 
@@ -243,7 +243,7 @@ class DataEncoder extends CoderConst {
 			if (val.length <= 0xffff) return _bin(this.type.BINARY16, tools.int16UToBuf(val.length), val);
 			return _bin(this.type.BINARY32, tools.int32UToBuf(val.length), val);
 		} catch (e) {
-			throw Error('Decoder error: bin');
+			throw Error('Encoder error: bin');
 		}
 	}
 
@@ -251,7 +251,7 @@ class DataEncoder extends CoderConst {
 		try {
 			return this.make(this.type.BINFLAGS, this.tools.binFlagsToBuf(val));
 		} catch (e) {
-			throw Error('Decoder error: binFlags');
+			throw Error('Encoder error: binFlags');
 		}
 	}
 
@@ -266,7 +266,7 @@ class DataEncoder extends CoderConst {
 			if (len <= 0xffff) return _obj(this.type.OBJECT16, tools.int16UToBuf(len), rows);
 			return _obj(this.type.OBJECT32, tools.int32UToBuf(len), rows);
 		} catch (e) {
-			throw Error('Decoder error: obj');
+			throw Error('Encoder error: obj');
 		}
 	}
 
@@ -280,7 +280,7 @@ class DataEncoder extends CoderConst {
 			if (rows.length <= 0xffff) return _arr(this.type.ARRAY16, tools.int16UToBuf(rows.length), rows);
 			return _arr(this.type.ARRAY32, tools.int32UToBuf(rows.length), rows);
 		} catch (e) {
-			throw Error('Decoder error: arr');
+			throw Error('Encoder error: arr');
 		}
 	}
 
@@ -293,7 +293,7 @@ class DataEncoder extends CoderConst {
 			if (!oTools.isString(val) || !val) return false;
 			return this.make(this.type.CHAR, Buffer.from(val[0], 'ascii'));
 		} catch (e) {
-			throw Error('Decoder error: char');
+			throw Error('Encoder error: char');
 		}
 	}
 
@@ -309,7 +309,7 @@ class DataEncoder extends CoderConst {
 			if (str.length <= 0xffff) return _make(ascii ? this.type.STRA16 : this.type.STR16, tools.int16UToBuf(str.length), str);
 			return _make(ascii ? this.type.STRA32 : this.type.STR32, tools.int32UToBuf(str.length), str);
 		} catch (e) {
-			throw Error('Decoder error: str');
+			throw Error('Encoder error: str');
 		}
 	}
 
@@ -341,7 +341,7 @@ class DataEncoder extends CoderConst {
 			}
 			return _toBigNum(new BigNumber(val));
 		} catch (e) {
-			throw Error('Decoder error: int');
+			throw Error('Encoder error: int');
 		}
 	}
 }
@@ -353,7 +353,11 @@ class DataDecoder extends CoderConst {
 	}
 
 	decode(msg) {
-		return this.decodeWLen(msg)[0];
+		try {
+			return this.decodeWLen(msg)[0];
+		} catch (e) {
+			throw Error('Decoder error: decode');
+		}
 	}
 
 	extract(msg, start, end) {
