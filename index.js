@@ -149,9 +149,13 @@ class DataEncoder extends CoderConst {
 	}
 
 	make(type, val) {
-		let res = tools.int8UToBuf(type);
-		if (!oTools.isUndefined(val)) res = Buffer.concat([res, val]);
-		return res;
+		try {
+			let res = tools.int8UToBuf(type);
+			if (!oTools.isUndefined(val)) res = Buffer.concat([res, val]);
+			return res;
+		} catch (e) {
+			throw Error('Decoder error: make');
+		}
 	}
 
 	registerCustom(id, encode, detector) {
@@ -159,22 +163,27 @@ class DataEncoder extends CoderConst {
 	}
 
 	custom(handler, val) {
-		const _custom = (type, id) => {
-			const msg = Buffer.from(handler.encode(val));
-			const len = msg.length <= 0xff ? 8 : msg.length <= 0xffff ? 16 : msg.length <= 0xffffffff ? 32 : false;
-			if (len === false) return;
-			let cLen = tools[msg.length <= 0xff ? 'int8UToBuf' : msg.length <= 0xffff ? 'int16UToBuf' : 'int32UToBuf'](msg.length);
+		try {
+			const _custom = (type, id) => {
+				const msg = Buffer.from(handler.encode(val));
+				const len = msg.length <= 0xff ? 8 : msg.length <= 0xffff ? 16 : msg.length <= 0xffffffff ? 32 : false;
+				if (len === false) return;
+				let cLen = tools[msg.length <= 0xff ? 'int8UToBuf' : msg.length <= 0xffff ? 'int16UToBuf' : 'int32UToBuf'](msg.length);
 
-			return this.make(this.type[`CUSTOM${type}_${len}`], Buffer.concat([id, cLen, msg]));
-		};
+				return this.make(this.type[`CUSTOM${type}_${len}`], Buffer.concat([id, cLen, msg]));
+			};
 
-		if (oTools.isString(handler)) {
-			handler = oTools.iterate(this.customHandlers, (el) => el.id === handler ? el : undefined, false);
+			if (oTools.isString(handler)) {
+				handler = oTools.iterate(this.customHandlers, (el) => el.id === handler ? el : undefined, false);
+			}
+			if (handler.id <= 0xff) return _custom(8, tools.int8UToBuf(handler.id));
+			if (handler.id <= 0xffff) return _custom(16, tools.int16UToBuf(handler.id));
+			if (handler.id <= 0xffffffff) return _custom(32, tools.int32UToBuf(handler.id));
+			return undefined;
+
+		} catch (e) {
+			throw Error(`Decoder error: custom [${handler.id}]`);
 		}
-		if (handler.id <= 0xff) return _custom(8, tools.int8UToBuf(handler.id));
-		if (handler.id <= 0xffff) return _custom(16, tools.int16UToBuf(handler.id));
-		if (handler.id <= 0xffffffff) return _custom(32, tools.int32UToBuf(handler.id));
-		return undefined;
 	}
 
 	auto(val) {
@@ -190,15 +199,24 @@ class DataEncoder extends CoderConst {
 		if (oTools.isString(val)) return this.str(val);
 		if (oTools.isArray(val)) return this.arr(val);
 		if (oTools.isObject(val)) return this.obj(val);
-		return false;
+
+		throw Error('Decoder error: unknown type');
+	}
+
+	encode(val) {
+		return this.auto(val);
 	}
 
 	date(val) {
-		const int53arr = tools.int53toTwoInt32(val.getTime());
-		return this.make(this.type.DATE, Buffer.concat([
-			tools.int32UToBuf(int53arr[0]),
-			tools.int32UToBuf(int53arr[1])
-		]));
+		try {
+			const int53arr = tools.int53toTwoInt32(val.getTime());
+			return this.make(this.type.DATE, Buffer.concat([
+				tools.int32UToBuf(int53arr[0]),
+				tools.int32UToBuf(int53arr[1])
+			]));
+		} catch (e) {
+			throw Error('Decoder error: date');
+		}
 	}
 
 	nil() {
@@ -218,36 +236,52 @@ class DataEncoder extends CoderConst {
 	}
 
 	bin(val) {
-		const _bin = (type, len, row) => this.make(type, Buffer.concat([len, row]));
+		try {
+			const _bin = (type, len, row) => this.make(type, Buffer.concat([len, row]));
 
-		if (val.length <= 0xff) return _bin(this.type.BINARY8, tools.int8UToBuf(val.length), val);
-		if (val.length <= 0xffff) return _bin(this.type.BINARY16, tools.int16UToBuf(val.length), val);
-		return _bin(this.type.BINARY32, tools.int32UToBuf(val.length), val);
+			if (val.length <= 0xff) return _bin(this.type.BINARY8, tools.int8UToBuf(val.length), val);
+			if (val.length <= 0xffff) return _bin(this.type.BINARY16, tools.int16UToBuf(val.length), val);
+			return _bin(this.type.BINARY32, tools.int32UToBuf(val.length), val);
+		} catch (e) {
+			throw Error('Decoder error: bin');
+		}
 	}
 
 	binFlags(val) {
-		return this.make(this.type.BINFLAGS, this.tools.binFlagsToBuf(val));
+		try {
+			return this.make(this.type.BINFLAGS, this.tools.binFlagsToBuf(val));
+		} catch (e) {
+			throw Error('Decoder error: binFlags');
+		}
 	}
 
 	obj(val) {
-		const _obj = (type, len, rows) => this.make(type, Buffer.concat([len, ...rows]));
+		try {
+			const _obj = (type, len, rows) => this.make(type, Buffer.concat([len, ...rows]));
 
-		const rows = oTools.iterate(val, (row, idx) => Buffer.concat([this.auto(idx), this.auto(row)]), []);
-		const len = Object.keys(rows).length;
+			const rows = oTools.iterate(val, (row, idx) => Buffer.concat([this.auto(idx), this.auto(row)]), []);
+			const len = Object.keys(rows).length;
 
-		if (len <= 0xff) return _obj(this.type.OBJECT8, tools.int8UToBuf(len), rows);
-		if (len <= 0xffff) return _obj(this.type.OBJECT16, tools.int16UToBuf(len), rows);
-		return _obj(this.type.OBJECT32, tools.int32UToBuf(len), rows);
+			if (len <= 0xff) return _obj(this.type.OBJECT8, tools.int8UToBuf(len), rows);
+			if (len <= 0xffff) return _obj(this.type.OBJECT16, tools.int16UToBuf(len), rows);
+			return _obj(this.type.OBJECT32, tools.int32UToBuf(len), rows);
+		} catch (e) {
+			throw Error('Decoder error: obj');
+		}
 	}
 
 	arr(val) {
-		const _arr = (type, len, rows) => this.make(type, Buffer.concat([len, ...rows]));
+		try {
+			const _arr = (type, len, rows) => this.make(type, Buffer.concat([len, ...rows]));
 
-		const rows = oTools.iterate(val, (row) => this.auto(row), []);
+			const rows = oTools.iterate(val, (row) => this.auto(row), []);
 
-		if (rows.length <= 0xff) return _arr(this.type.ARRAY8, tools.int8UToBuf(rows.length), rows);
-		if (rows.length <= 0xffff) return _arr(this.type.ARRAY16, tools.int16UToBuf(rows.length), rows);
-		return _arr(this.type.ARRAY32, tools.int32UToBuf(rows.length), rows);
+			if (rows.length <= 0xff) return _arr(this.type.ARRAY8, tools.int8UToBuf(rows.length), rows);
+			if (rows.length <= 0xffff) return _arr(this.type.ARRAY16, tools.int16UToBuf(rows.length), rows);
+			return _arr(this.type.ARRAY32, tools.int32UToBuf(rows.length), rows);
+		} catch (e) {
+			throw Error('Decoder error: arr');
+		}
 	}
 
 	bool(val) {
@@ -255,48 +289,60 @@ class DataEncoder extends CoderConst {
 	}
 
 	char(val) {
-		if (!oTools.isString(val) || !val) return false;
-		return this.make(this.type.CHAR, Buffer.from(val[0], 'ascii'));
+		try {
+			if (!oTools.isString(val) || !val) return false;
+			return this.make(this.type.CHAR, Buffer.from(val[0], 'ascii'));
+		} catch (e) {
+			throw Error('Decoder error: char');
+		}
 	}
 
 	str(val, ascii = false) {
-		const _make = (stype, blen, bstr) => {
-			return this.make(stype, Buffer.concat([Buffer.from(blen), bstr]));
-		};
+		try {
+			const _make = (stype, blen, bstr) => {
+				return this.make(stype, Buffer.concat([Buffer.from(blen), bstr]));
+			};
 
-		const str = Buffer.from(val, ascii ? 'ascii' : 'utf8');
+			const str = Buffer.from(val, ascii ? 'ascii' : 'utf8');
 
-		if (str.length <= 0xff) return _make(ascii ? this.type.STRA8 : this.type.STR8, tools.int8UToBuf(str.length), str);
-		if (str.length <= 0xffff) return _make(ascii ? this.type.STRA16 : this.type.STR16, tools.int16UToBuf(str.length), str);
-		return _make(ascii ? this.type.STRA32 : this.type.STR32, tools.int32UToBuf(str.length), str);
+			if (str.length <= 0xff) return _make(ascii ? this.type.STRA8 : this.type.STR8, tools.int8UToBuf(str.length), str);
+			if (str.length <= 0xffff) return _make(ascii ? this.type.STRA16 : this.type.STR16, tools.int16UToBuf(str.length), str);
+			return _make(ascii ? this.type.STRA32 : this.type.STR32, tools.int32UToBuf(str.length), str);
+		} catch (e) {
+			throw Error('Decoder error: str');
+		}
 	}
 
 	int(val) {
-		const _toBigNum = (bnInst) => {
-			const bigNumStr = bnInst.toString();
-			return this.make(this.type.BIGNUM, Buffer.concat([tools.int8UToBuf(bigNumStr.length), Buffer.from(bigNumStr, 'ascii')]));
-		};
+		try {
+			const _toBigNum = (bnInst) => {
+				const bigNumStr = bnInst.toString();
+				return this.make(this.type.BIGNUM, Buffer.concat([tools.int8UToBuf(bigNumStr.length), Buffer.from(bigNumStr, 'ascii')]));
+			};
 
-		if (isNaN(val)) return this.nan();
-		if (val === Infinity) return this.infinity();
-		if (val === -Infinity) return this.infinity(true);
-		if (this.isBigNumber(val)) return _toBigNum(val);
-		if (oTools.isString(val)) return _toBigNum(new BigNumber(val));
-		if (oTools.isFloat(val)) return this.make(this.type.DOUBLE, tools.doubleToBuf(val));
-		let negative = false;
-		if (!oTools.isPositiveInteger(val)) negative = true;
-		val = negative ? val * -1 : val;
-		if (val <= 0xff) return this.make(negative ? this.type.NINT8 : this.type.INT8, tools.int8UToBuf(val));
-		if (val <= 0xffff) return this.make(negative ? this.type.NINT16 : this.type.INT16, tools.int16UToBuf(val));
-		if (val <= 0xffffffff) return this.make(negative ? this.type.NINT32 : this.type.INT32, tools.int32UToBuf(val));
-		if (val <= Number.MAX_SAFE_INTEGER) {
-			const int53arr = tools.int53toTwoInt32(val);
-			return this.make(negative ? this.type.NINT53 : this.type.INT53, Buffer.concat([
-				tools.int32UToBuf(int53arr[0]),
-				tools.int32UToBuf(int53arr[1])
-			]));
+			if (isNaN(val)) return this.nan();
+			if (val === Infinity) return this.infinity();
+			if (val === -Infinity) return this.infinity(true);
+			if (this.isBigNumber(val)) return _toBigNum(val);
+			if (oTools.isString(val)) return _toBigNum(new BigNumber(val));
+			if (oTools.isFloat(val)) return this.make(this.type.DOUBLE, tools.doubleToBuf(val));
+			let negative = false;
+			if (!oTools.isPositiveInteger(val)) negative = true;
+			val = negative ? val * -1 : val;
+			if (val <= 0xff) return this.make(negative ? this.type.NINT8 : this.type.INT8, tools.int8UToBuf(val));
+			if (val <= 0xffff) return this.make(negative ? this.type.NINT16 : this.type.INT16, tools.int16UToBuf(val));
+			if (val <= 0xffffffff) return this.make(negative ? this.type.NINT32 : this.type.INT32, tools.int32UToBuf(val));
+			if (val <= Number.MAX_SAFE_INTEGER) {
+				const int53arr = tools.int53toTwoInt32(val);
+				return this.make(negative ? this.type.NINT53 : this.type.INT53, Buffer.concat([
+					tools.int32UToBuf(int53arr[0]),
+					tools.int32UToBuf(int53arr[1])
+				]));
+			}
+			return _toBigNum(new BigNumber(val));
+		} catch (e) {
+			throw Error('Decoder error: int');
 		}
-		return _toBigNum(new BigNumber(val));
 	}
 }
 
@@ -453,19 +499,25 @@ class DataDecoder extends CoderConst {
 	}
 }
 
-const DataCoder = {
-	decoder: new DataDecoder(),
-	encoder: new DataEncoder(),
-	tools,
-	use(what) {
-		DataCoder.decoder.registerCustom(what.id, what.decode);
-		DataCoder.encoder.registerCustom(what.id, what.encode, what.detector);
+class DataCoder {
+	constructor() {
+		this.decoder = new DataDecoder();
+		this.encoder = new DataEncoder();
+		this.tools = tools;
+		this.oTools = oTools;
 	}
-};
+
+	use(id, decode, encode, detector) {
+		this.decoder.registerCustom(id, decode);
+		this.encoder.registerCustom(id, encode, detector);
+	}
+}
 
 module.exports = {
 	DataEncoder,
 	DataDecoder,
 	DataCoder,
+	dataCoder: new DataCoder(),
+	oTools,
 	tools
 };
