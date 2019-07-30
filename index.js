@@ -60,7 +60,12 @@ const tools = {
 	bufToDouble    : (buf, offset = 0, be = false) => buf[`readDouble${be ? 'BE' : 'LE'}`](offset),
 	pad            : (str, z = 8) => str.length < z ? tools.pad('0' + str, z) : str,
 	bufToBinFlags  : (buf, offset) => tools.pad(tools.bufToInt8U(buf, offset).toString(2)).split('').map(r => r === '1'),
-	binFlagsToBuf  : (arr) => tools.int8UToBuf(parseInt(oTools.iterate(Array(8).fill(false, 0, 8), (el, idx) => arr[idx] ? 1 : 0, []).join(''), 2))
+	binFlagsToBuf  : (arr) => tools.int8UToBuf(parseInt(oTools.iterate(Array(8).fill(false, 0, 8), (el, idx) => arr[idx] ? 1 : 0, []).join(''), 2)),
+	hexToBinStr    : (val) => {
+		let i = 0, l = val.length - 1, bytes = [];
+		for (i; i < l; i += 2) bytes.push(parseInt(val.substr(i, 2), 16));
+		return String.fromCharCode.apply(String, bytes);
+	}
 };
 
 oTools.iterate(BASE_ALPHABETS, (base, name) => {
@@ -514,6 +519,14 @@ class DataCoder {
 	use(id, decode, encode, detector) {
 		this.decoder.registerCustom(id, decode);
 		this.encoder.registerCustom(id, encode, detector);
+	}
+
+	encode(...args) {
+		return this.encoder.encode(...args);
+	}
+
+	decode(...args) {
+		return this.decoder.decode(...args);
 	}
 }
 
