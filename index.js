@@ -516,7 +516,7 @@ class DataCoder {
 		this.oTools = oTools;
 	}
 
-	use(id, decode, encode, detector) {
+	use(id, detector, encode, decode) {
 		this.decoder.registerCustom(id, decode);
 		this.encoder.registerCustom(id, encode, detector);
 	}
