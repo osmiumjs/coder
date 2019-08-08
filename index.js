@@ -121,7 +121,8 @@ class CoderConst {
 			CUSTOM16_32: 216,
 			CUSTOM32_8 : 217,
 			CUSTOM32_16: 218,
-			CUSTOM32_32: 219
+			CUSTOM32_32: 219,
+			FUNCTION   : 221,
 		};
 	}
 
@@ -203,6 +204,7 @@ class DataEncoder extends CoderConst {
 		if (this.isDate(val)) return this.date(val);
 		if (oTools.isString(val)) return this.str(val);
 		if (oTools.isArray(val)) return this.arr(val);
+		if (oTools.isFunction(val)) return this.make(this.type.FUNCTION);
 		if (oTools.isObject(val)) return this.obj(val);
 
 		throw Error('Encoder error: unknown type');
@@ -264,7 +266,10 @@ class DataEncoder extends CoderConst {
 		try {
 			const _obj = (type, len, rows) => this.make(type, Buffer.concat([len, ...rows]));
 
-			const rows = oTools.iterate(val, (row, idx) => Buffer.concat([this.auto(idx), this.auto(row)]), []);
+			const rows = oTools.iterate(val, (row, idx) => {
+				if (oTools.isFunction(idx)) return;
+				return Buffer.concat([this.auto(idx), this.auto(row)]);
+			}, []);
 			const len = Object.keys(rows).length;
 
 			if (len <= 0xff) return _obj(this.type.OBJECT8, tools.int8UToBuf(len), rows);
@@ -377,6 +382,9 @@ class DataDecoder extends CoderConst {
 		msg = Buffer.from(msg);
 		const type = tools.bufToInt8U(msg);
 		switch (type) {
+			case this.type.FUNCTION:
+				return [undefined, 1];
+
 			case this.type.UNDEFINED:
 				return [undefined, 1];
 

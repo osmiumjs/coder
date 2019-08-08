@@ -10,7 +10,7 @@
 	"bugs"        : {
 		"url": "https://github.com/VasiliyIsaichkin/osmium-coder/issues"
 	},
-	"version"     : "0.5.0",
+	"version"     : "0.5.1",
 	"main"        : "index.js",
 	"dependencies": {
 		"bignumber.js": "^9.0.0",
