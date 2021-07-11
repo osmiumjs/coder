@@ -1,19 +1,42 @@
 {
-	"name"        : "osmium-coder",
-	"description" : "Osmium data coder",
-	"license"     : "MIT",
-	"author"      : {
+	"name"           : "@osmium/coder",
+	"description"    : "Osmium data coder",
+	"version"        : "0.4.0",
+	"license"        : "MIT",
+	"author"         : {
 		"name" : "Vasiliy Isaichkin",
 		"email": "vasiliy@isaichkin.ru"
 	},
-	"repository"  : "https://github.com/VasiliyIsaichkin/osmium-coder",
-	"bugs"        : {
-		"url": "https://github.com/VasiliyIsaichkin/osmium-coder/issues"
+	"repository"     : "https://github.com/osmiumjs/coder",
+	"main"           : "./dist/index.js",
+	"types"          : "./defs/index.d.ts",
+	"scripts"        : {
+		"compile"       : "tsc && webpack",
+		"compress"      : "terser --compress --ecma 2015 -o ./dist/index.min.js -- ./dist/index.min.js",
+		"make_docs"     : "typedoc",
+		"test"          : "mocha tests",
+		"build"         : "rimraf dist docs defs && npm run compile && npm run compress && npm run make_docs && npm run test",
+		"prepublishOnly": "npm run build"
 	},
-	"version"     : "0.5.2",
-	"main"        : "index.js",
-	"dependencies": {
-		"bignumber.js": "^9.0.0",
-		"osmium-tools": "^0.2.11"
+	"dependencies"   : {
+		"@osmium/tools": "^0.4.0"
+	},
+	"devDependencies": {
+		"@types/bs58"              : "^4.0.1",
+		"@types/chai"              : "^4.2.21",
+		"@types/mocha"             : "^8.2.3",
+		"@types/node"              : "~14.17.5",
+		"awesome-typescript-loader": "~5.2.1",
+		"buffer"                   : "^6.0.3",
+		"chai"                     : "~4.3.4",
+		"mocha"                    : "~8.4.0",
+		"rimraf"                   : "^3.0.2",
+		"safe-buffer"              : "^5.2.1",
+		"terser"                   : "^5.7.1",
+		"typedoc"                  : "~0.20.36",
+		"typedoc-neo-theme"        : "~1.1.1",
+		"typescript"               : "~4.2.4",
+		"webpack"                  : "~5.44.0",
+		"webpack-cli"              : "~4.7.2"
 	}
 }
