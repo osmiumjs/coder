@@ -1,7 +1,7 @@
 {
 	"name"           : "@osmium/coder",
 	"description"    : "Osmium data coder",
-	"version"        : "0.6.1",
+	"version"        : "0.6.2",
 	"license"        : "MIT",
 	"author"         : {
 		"name" : "Vasiliy Isaichkin",
@@ -21,7 +21,7 @@
 		"prepublishOnly": "npm run build"
 	},
 	"dependencies"   : {
-		"@osmium/tools": "^0.5.5",
+		"@osmium/tools": "~0.5.6",
 		"fflate"       : "~0.7.3",
 		"msgpackr"     : "~1.5.5"
 	},
