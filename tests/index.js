@@ -253,14 +253,14 @@ function doTests(coderName, title) {
 		describe(`${title}::Binary schema-based serializer test`, function () {
 			it('Object', function () {
 				const sample = {key1: true, key2: 291, key3: 'hello', key4: {a: 1, b: -20, c: 'hello'}};
-				serializer.registerSchema(1, sample);
+				serializer.registerSchema(1, Object.keys(sample));
 				expect(serializeDeserialize(serializer, sample)).to.eql(sample);
 			});
 
 			it('Object with custom', function () {
 				const testValue = {test: new TestClassSer('hellomoto2')};
 
-				serializer.registerSchema(2, testValue);
+				serializer.registerSchema(2, Object.keys(testValue));
 
 				serializer.use(102, TestClassSer, (v) => v.getValue(), (v) => new TestClassSer(v));
 

@@ -9,16 +9,18 @@ interface SerializerPacketOptions {
 	useSchema?: boolean;
 }
 
-export interface SerializerSchema {
+export type SerializerSchema = Array<string>;
+
+export interface SerializerSchemaObject {
 	id: number;
-	fields: Object;
+	fields: SerializerSchema;
 }
 
 interface SerializerSchemes {
-	[id: number]: Object;
+	[id: number]: SerializerSchema;
 }
 
-type SchemaIdOrSchemaObject = SerializerSchema | number | null;
+type SerializerSchemaIdOrSchemaObject = SerializerSchemaObject | number | null;
 
 export class Serializer {
 	readonly version: number = 3;
@@ -74,7 +76,11 @@ export class Serializer {
 	}
 
 	registerSchema<T>(id: number, fields: T): void
-	registerSchema(id: number, fields: Object): void {
+	registerSchema(id: number, fields: SerializerSchema): void {
+		if (this.schemes[id]) {
+			throw new Error('Schema id alerady registred');
+		}
+
 		this.schemes[id] = fields;
 	}
 
@@ -82,17 +88,17 @@ export class Serializer {
 		delete this.schemes[id];
 	}
 
-	serialize<T>(payload: T, schemaIdOrSchemaObject?: SchemaIdOrSchemaObject): Buffer
-	serialize(payload: Object, schemaIdOrSchemaObject: SchemaIdOrSchemaObject = null): Buffer {
-		let schema: SchemaIdOrSchemaObject = null;
+	serialize<T>(payload: T, schemaIdOrSchemaObject?: SerializerSchemaIdOrSchemaObject): Buffer
+	serialize(payload: Object, schemaIdOrSchemaObject: SerializerSchemaIdOrSchemaObject = null): Buffer {
+		let schema: SerializerSchemaIdOrSchemaObject = null;
 
 		if (!isObject(payload)) {
 			throw new Error('Payload is not Object, cant process');
 		}
 
 		if (schemaIdOrSchemaObject === null) {
-			iterate(this.schemes as { [id: string]: Object }, (row, id, iter) => {
-				if (JSON.stringify(Object.keys(row)) !== JSON.stringify(Object.keys(payload))) return;
+			iterate(this.schemes as { [id: string]: [string] }, (row, id, iter) => {
+				if (JSON.stringify(row) !== JSON.stringify(Object.keys(payload))) return;
 
 				iter.break();
 				schemaIdOrSchemaObject = parseInt(id);
@@ -101,7 +107,7 @@ export class Serializer {
 		}
 
 		const schemaId: number = isObject(schemaIdOrSchemaObject)
-		                         ? (schemaIdOrSchemaObject as SerializerSchema).id
+		                         ? (schemaIdOrSchemaObject as SerializerSchemaObject).id
 		                         : (schemaIdOrSchemaObject as number);
 
 		if (this.schemes[schemaId]) {
@@ -129,7 +135,7 @@ export class Serializer {
 		const [useCompress, useCRC32, useSchema] = CoderTools.bufToBinFlags(buffer, 1);
 		let offset = 2;
 		let crc32Offset, schemaIdOffset = 0;
-		let currentSchema = {};
+		let currentSchema: SerializerSchema = [];
 
 		if (useCRC32) {
 			crc32Offset = offset;
@@ -162,12 +168,12 @@ export class Serializer {
 
 		let decodedPayload = this.coder.decode(payload);
 
-		if (useSchema && Object.keys(currentSchema).length) {
+		if (useSchema && currentSchema.length) {
 			if (!isArray(decodedPayload)) {
 				throw new Error('Encoded payload not array but schema flag is present');
 			}
 
-			decodedPayload = iterate(Object.keys(currentSchema), (key, idx, iter) => {
+			decodedPayload = iterate(currentSchema, (key, idx, iter) => {
 				iter.key(key);
 
 				return (decodedPayload as [any])[idx];

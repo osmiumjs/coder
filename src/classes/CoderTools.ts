@@ -2,7 +2,6 @@ import {base32, base64} from '../lib/rfc4648';
 const crc32 = require('../lib/crc/crc32');
 import BaseX from '../lib/base-x/index';
 import * as nTools from '@osmium/tools';
-import {unwatchFile} from 'fs';
 
 export class CoderTools {
 	static BASE_ALPHABETS = {
