@@ -5,7 +5,7 @@ export class DataCoder {
 	private packr: Packr;
 
 	constructor(options: Options = {}, packrInstance: Packr | null = null) {
-		const instanceOptions = Object.assign({
+		const instanceOptions: Options = Object.assign({
 			encodeUndefinedAsNil: false,
 			largeBigIntToFloat  : false,
 			structuredClone     : true,
@@ -15,6 +15,9 @@ export class DataCoder {
 			useTimestamp32      : false,
 			int64AsNumber       : false
 		}, options);
+
+		this.use(201, Map, (v: Map<unknown, unknown>) => [...v.entries()], (v) => new Map(v));
+		this.use(202, Set, (v: Set<unknown>) => [...v.values()], (v) => new Set(v));
 
 		this.packr = packrInstance ? packrInstance : new Packr(instanceOptions);
 	}

@@ -11,9 +11,21 @@ const dataCoder = new DataCoder();
 const serializer = new Serializer(dataCoder);
 
 export {
-	oTools, CoderTools, dataCoder, serializer, DataCoder, Serializer, _Buffer
+	oTools,
+	CoderTools,
+	dataCoder,
+	serializer,
+	DataCoder,
+	Serializer,
+	_Buffer
 };
 
 export default {
-	oTools, CoderTools, dataCoder, serializer, DataCoder, Serializer, _Buffer
+	oTools,
+	CoderTools,
+	dataCoder,
+	serializer,
+	DataCoder,
+	Serializer,
+	_Buffer
 };

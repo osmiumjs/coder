@@ -214,6 +214,40 @@ function doTests(coderName, title) {
 				});
 			});
 
+			describe('Map', function () {
+				it('Map number/string', function () {
+					const map = (new Map()).set(1, '1').set(2, '2').set(3, '3').set(4, '4');
+					expect(encodeDecode(map)).to.eql(map);
+				});
+
+				it('Map array/number', function () {
+					const map = (new Map()).set(['1'], 1).set(['2'], 2).set(['3'], 3).set(['4'], 4);
+					expect(encodeDecode(map)).to.eql(map);
+				});
+
+				it('Map object/array', function () {
+					const map = (new Map()).set({a: 'a'}, [1]).set({b: 'b'}, [2]).set({c: 'c'}, [3]).set({d: 'd'}, [4]);
+					expect(encodeDecode(map)).to.eql(map);
+				});
+			});
+
+			describe('Set', function () {
+				it('Set number', function () {
+					const map = (new Set()).add(1).add(2).add(3).add(4);
+					expect(encodeDecode(map)).to.eql(map);
+				});
+
+				it('Set array', function () {
+					const map = (new Set()).add([1]).add([2]).add([3]).add([4]);
+					expect(encodeDecode(map)).to.eql(map);
+				});
+
+				it('Set object', function () {
+					const map = (new Set()).add({a: 'a'}).add({b: 'b'}).add({c: 'c'}).add({d: 'd'});
+					expect(encodeDecode(map)).to.eql(map);
+				});
+			});
+
 			describe('Complex types', function () {
 				it('Date', function () {
 					const date = new Date();
