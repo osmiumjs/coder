@@ -90,8 +90,7 @@ export class Serializer {
 		delete this.schemes[id];
 	}
 
-	serialize<T>(payload: T, schemaIdOrSchemaObject?: SerializerSchemaIdOrSchemaObject): Buffer
-	serialize(payload: Object, schemaIdOrSchemaObject: SerializerSchemaIdOrSchemaObject = null): Buffer {
+	serialize<T extends object = { [key: string]: unknown }>(payload: T, schemaIdOrSchemaObject: SerializerSchemaIdOrSchemaObject = null): Buffer {
 		let schema: SerializerSchemaIdOrSchemaObject = null;
 
 		if (!isObject(payload)) {
@@ -108,7 +107,6 @@ export class Serializer {
 				iter.break();
 				schemaIdOrSchemaObject = parseInt(id);
 			});
-
 		}
 
 		const schemaId: number = isObject(schemaIdOrSchemaObject)
@@ -120,11 +118,18 @@ export class Serializer {
 				id    : schemaId,
 				fields: this.schemes[schemaId]
 			};
+			const keys = Object.keys(payload).sort((a, b) => a.localeCompare(b));
+			payload = iterate(keys, (key, _, iter) => {
+				iter.key(key);
+
+				// @ts-ignore
+				return payload[key];
+			}, {});
 		}
 
-		payload = iterate(payload as {}, (row) => row, []);
+		const payloadArray = iterate(payload as {}, (row) => row, []);
 
-		const out = this.coder.encode(payload);
+		const out = this.coder.encode(payloadArray);
 		return this.makePacket(this.options, out, schema?.id || null);
 	}
 
@@ -177,6 +182,8 @@ export class Serializer {
 			if (!isArray(decodedPayload)) {
 				throw new Error('Encoded payload not array but schema flag is present');
 			}
+
+			currentSchema.sort((a, b) => a.localeCompare(b));
 
 			decodedPayload = iterate(currentSchema, (key, idx, iter) => {
 				iter.key(key);
