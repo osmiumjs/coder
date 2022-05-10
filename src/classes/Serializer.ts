@@ -81,6 +81,8 @@ export class Serializer {
 			throw new Error('Schema id alerady registred');
 		}
 
+		fields.sort((a, b) => a.localeCompare(b));
+
 		this.schemes[id] = fields;
 	}
 
