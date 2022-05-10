@@ -99,8 +99,11 @@ export class Serializer {
 		}
 
 		if (schemaIdOrSchemaObject === null) {
-			iterate(this.schemes as { [id: string]: [string] }, (row, id, iter) => {
-				if (JSON.stringify(row) !== JSON.stringify(Object.keys(payload))) return;
+			iterate(this.schemes as { [id: string]: string[] }, (row, id, iter) => {
+				const payloadKeys = Object.keys(payload);
+				payloadKeys.sort((a, b) => a.localeCompare(b));
+
+				if (JSON.stringify(row) !== JSON.stringify(payloadKeys)) return;
 
 				iter.break();
 				schemaIdOrSchemaObject = parseInt(id);

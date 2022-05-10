@@ -1,7 +1,7 @@
 {
 	"name"           : "@osmium/coder",
 	"description"    : "Osmium data coder",
-	"version"        : "0.6.4",
+	"version"        : "0.6.5",
 	"license"        : "MIT",
 	"author"         : {
 		"name" : "Vasiliy Isaichkin",
