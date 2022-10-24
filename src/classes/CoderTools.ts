@@ -1,7 +1,8 @@
+import {iterateSync}    from '@osmium/iterate';
 import {base32, base64} from '../lib/rfc4648';
+
 const crc32 = require('../lib/crc/crc32');
-import BaseX from '../lib/base-x/index';
-import * as nTools from '@osmium/tools';
+import BaseX            from '../lib/base-x/index';
 
 export class CoderTools {
 	static BASE_ALPHABETS = {
@@ -24,7 +25,9 @@ export class CoderTools {
 	}
 
 	static toBuffer(what: string | Buffer, ascii: boolean = false): Buffer {
-		return Buffer.isBuffer(what) ? what : Buffer.from(what, ascii ? 'ascii' : 'utf8');
+		const encoding = ascii ? 'ascii' : 'utf8';
+
+		return Buffer.isBuffer(what) ? what : Buffer.from(what, encoding);
 	}
 
 	static baseXEncode(what: string | Buffer, base: string, asAscii: boolean = false): string {
@@ -33,8 +36,9 @@ export class CoderTools {
 
 	static baseXDecode(what: string, base: string, asBuffer = false, asAscii = false): string | Buffer {
 		const b = BaseX(base).decode(what);
+		const encoding = asAscii ? 'ascii' : 'utf8';
 
-		return asBuffer ? b : b.toString(asAscii ? 'ascii' : 'utf8');
+		return asBuffer ? b : b.toString(encoding);
 	}
 
 	static base16Encode(what: string | Buffer, asAscii = false): string {
@@ -71,8 +75,9 @@ export class CoderTools {
 
 	static base32Decode(what: string, asBuffer = false, asAscii = false): string | Buffer | Uint8Array {
 		const result = base32.parse(what, {loose: true});
+		const encoding = asAscii ? 'ascii' : 'utf8';
 
-		return asBuffer ? result : Buffer.from(result).toString(asAscii ? 'ascii' : 'utf8');
+		return asBuffer ? result : Buffer.from(result).toString(encoding);
 	}
 
 	static base36Decode(what: string, asBuffer = false, asAscii = false): string | Buffer {
@@ -89,7 +94,9 @@ export class CoderTools {
 
 	static base64Decode(what: string, asBuffer = false, asAscii = false): string | Buffer | Uint8Array {
 		const result = base64.parse(what, {loose: true});
-		return asBuffer ? result : Buffer.from(result).toString(asAscii ? 'ascii' : 'utf8');
+		const encoding = asAscii ? 'ascii' : 'utf8';
+
+		return asBuffer ? result : Buffer.from(result).toString(encoding);
 	}
 
 	static base66Decode(what: string, asBuffer = false, asAscii = false): string | Buffer {
@@ -185,13 +192,13 @@ export class CoderTools {
 		return (`${str}`).length < z ? this.pad(`0${str}`, z) : `${str}`;
 	}
 
-	static bufToBinFlags(buf: Buffer | number, offset: number = 0): Array<Boolean> {
+	static bufToBinFlags(buf: Buffer | number, offset: number = 0): Array<boolean> {
 		const data = Buffer.isBuffer(buf) ? this.bufToInt8U(buf, offset).toString(2) : buf;
 		return this.pad(data).split('').map(r => r === '1');
 	}
 
 	static binFlagsToBuf(arr: Array<boolean>): Buffer {
-		const arrayByte: any = nTools.iterate(Array(8).fill(false, 0, 8), (el, idx) => arr[idx] ? 1 : 0, []);
+		const arrayByte: any = iterateSync(Array(8).fill(false, 0, 8), (el, idx) => arr[idx] ? 1 : 0, []);
 		const byte = arrayByte.join('');
 
 		return this.int8UToBuf(parseInt(byte, 2));
@@ -199,7 +206,7 @@ export class CoderTools {
 
 	static hexToBinStr(val: string): string {
 		let i = 0, l = val.length - 1, bytes = [];
-		for (i; i < l; i += 2) bytes.push(parseInt(val.substr(i, 2), 16));
+		for (i; i < l; i += 2) bytes.push(parseInt(val.substring(i, 2), 16));
 
 		return String.fromCharCode.apply(String, bytes);
 	}

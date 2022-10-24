@@ -1,6 +1,7 @@
-import {CoderTools} from './CoderTools';
-import {DataCoder} from './DataCoder';
-import {isArray, isObject, iterate} from '@osmium/tools';
+import {iterateSync}          from '@osmium/iterate';
+import {CoderTools}           from './CoderTools';
+import {DataCoder}            from './DataCoder';
+import {isArray, isObject}    from '@osmium/is';
 import {gzipSync, gunzipSync} from 'fflate';
 
 interface SerializerPacketOptions {
@@ -90,7 +91,7 @@ export class Serializer {
 		delete this.schemes[id];
 	}
 
-	serialize<T extends object = { [key: string]: unknown }>(payload: T, schemaIdOrSchemaObject: SerializerSchemaIdOrSchemaObject = null): Buffer {
+	serialize<T extends Record<string, unknown>>(payload: T, schemaIdOrSchemaObject: SerializerSchemaIdOrSchemaObject = null): Buffer {
 		let schema: SerializerSchemaIdOrSchemaObject = null;
 
 		if (!isObject(payload)) {
@@ -98,7 +99,7 @@ export class Serializer {
 		}
 
 		if (schemaIdOrSchemaObject === null) {
-			iterate(this.schemes as { [id: string]: string[] }, (row, id, iter) => {
+			iterateSync(this.schemes as { [id: string]: string[] }, (row, id, iter) => {
 				const payloadKeys = Object.keys(payload);
 				payloadKeys.sort((a, b) => a.localeCompare(b));
 
@@ -119,15 +120,15 @@ export class Serializer {
 				fields: this.schemes[schemaId]
 			};
 			const keys = Object.keys(payload).sort((a, b) => a.localeCompare(b));
-			payload = iterate(keys, (key, _, iter) => {
+
+			payload = iterateSync(keys, (key, _, iter) => {
 				iter.key(key);
 
-				// @ts-ignore
 				return payload[key];
-			}, {});
+			}, {} as Record<string, unknown>) as T;
 		}
 
-		const payloadArray = iterate(payload as {}, (row) => row, []);
+		const payloadArray = iterateSync(payload as {}, (row) => row, []);
 
 		const out = this.coder.encode(payloadArray);
 		return this.makePacket(this.options, out, schema?.id || null);
@@ -163,7 +164,7 @@ export class Serializer {
 			}
 		}
 
-		let payload = buffer.slice(offset, buffer.length);
+		let payload = buffer.subarray(offset, buffer.length);
 
 		if (useCRC32) {
 			const crc32 = CoderTools.bufToInt32U(buffer, crc32Offset);
@@ -185,13 +186,12 @@ export class Serializer {
 
 			currentSchema.sort((a, b) => a.localeCompare(b));
 
-			decodedPayload = iterate(currentSchema, (key, idx, iter) => {
+			decodedPayload = iterateSync(currentSchema, (key, idx, iter) => {
 				iter.key(key);
 
 				return (decodedPayload as [any])[idx];
 			}, {});
 		}
-
 
 		return decodedPayload;
 	}

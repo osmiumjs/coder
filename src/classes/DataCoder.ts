@@ -1,5 +1,5 @@
 import {Packr, addExtension} from 'msgpackr';
-import {Options} from 'msgpackr/unpack';
+import {Options}             from 'msgpackr/unpack';
 
 export class DataCoder {
 	private packr: Packr;

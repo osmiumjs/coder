@@ -47,7 +47,7 @@ export declare class CoderTools {
     static bufToFloat(buf: Buffer, offset?: number, be?: boolean): number;
     static bufToDouble(buf: Buffer, offset?: number, be?: boolean): number;
     static pad(str: string | number, z?: number): string;
-    static bufToBinFlags(buf: Buffer | number, offset?: number): Array<Boolean>;
+    static bufToBinFlags(buf: Buffer | number, offset?: number): Array<boolean>;
     static binFlagsToBuf(arr: Array<boolean>): Buffer;
     static hexToBinStr(val: string): string;
     static crc32(data: Buffer | Uint8Array | string, previous?: number): number;

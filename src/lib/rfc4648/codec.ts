@@ -1,17 +1,17 @@
 /* eslint-disable @typescript-eslint/strict-boolean-expressions */
 export interface Encoding {
-	bits: number
-	chars: string
-	codes?: { [char: string]: number }
+	bits: number;
+	chars: string;
+	codes?: { [char: string]: number };
 }
 
 export interface ParseOptions {
-	loose?: boolean
-	out?: new (size: number) => { [index: number]: number }
+	loose?: boolean;
+	out?: new (size: number) => { [index: number]: number };
 }
 
 export interface StringifyOptions {
-	pad?: boolean
+	pad?: boolean;
 }
 
 export function parse(
@@ -79,6 +79,7 @@ export function stringify(
 
 	let bits = 0;
 	let buffer = 0;
+
 	for (let i = 0; i < data.length; ++i) {
 		buffer = (buffer << 8) | (0xff & data[i]);
 		bits += 8;
