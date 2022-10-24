@@ -91,7 +91,7 @@ export class Serializer {
 		delete this.schemes[id];
 	}
 
-	serialize<T extends Record<string, unknown>>(payload: T, schemaIdOrSchemaObject: SerializerSchemaIdOrSchemaObject = null): Buffer {
+	serialize<T extends { [key: string | number | symbol]: unknown }>(payload: T, schemaIdOrSchemaObject: SerializerSchemaIdOrSchemaObject = null): Buffer {
 		let schema: SerializerSchemaIdOrSchemaObject = null;
 
 		if (!isObject(payload)) {
@@ -124,8 +124,8 @@ export class Serializer {
 			payload = iterateSync(keys, (key, _, iter) => {
 				iter.key(key);
 
-				return payload[key];
-			}, {} as Record<string, unknown>) as T;
+				return (payload as any)[key];
+			}, {} as Record<string | symbol | number, unknown>) as T;
 		}
 
 		const payloadArray = iterateSync(payload as {}, (row) => row, []);
