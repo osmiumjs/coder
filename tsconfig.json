@@ -1,27 +1,34 @@
 {
 	"compilerOptions": {
-		"target"                : "ESNext",
-		"lib"                   : [
+		"target"                          : "ESNext",
+		"lib"                             : [
 			"DOM",
-			"ES2016",
-			"ES2017",
-			"ES2018",
-			"ES2019",
-			"ES2020",
 			"ES2021",
 			"ESNext"
 		],
-		"declaration"           : true,
-		"declarationDir"        : "./defs/",
-		"module"                : "commonjs",
-		"outDir"                : "dist",
-		"resolveJsonModule"     : true,
-		"sourceMap"             : true,
-		"strict"                : true,
-		"allowJs"               : true,
-		"experimentalDecorators": true,
-		"emitDecoratorMetadata" : true,
-		"types"                 : ["mocha", "node"]
+		"declaration"                     : true,
+		"declarationDir"                  : "./defs/",
+		"module"                          : "commonjs",
+		"outDir"                          : "dist",
+		"allowJs"                         : true,
+		"allowSyntheticDefaultImports"    : true,
+		"emitDecoratorMetadata"           : true,
+		"esModuleInterop"                 : true,
+		"experimentalDecorators"          : true,
+		"forceConsistentCasingInFileNames": true,
+		"incremental"                     : true,
+		"noFallthroughCasesInSwitch"      : true,
+		"noImplicitAny"                   : true,
+		"noImplicitOverride"              : true,
+		"strictFunctionTypes"             : true,
+		"removeComments"                  : true,
+		"resolveJsonModule"               : true,
+		"skipLibCheck"                    : true,
+		"sourceMap"                       : true,
+		"strict"                          : true,
+		"strictBindCallApply"             : true,
+		"strictNullChecks"                : true,
+		"types"                           : ["mocha", "node"]
 	},
 	"include"        : [
 		"./src/**/*"
