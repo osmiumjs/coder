@@ -1,11 +1,16 @@
-import {iterateSync}          from '@osmium/iterate';
-import {CoderTools}           from './CoderTools';
-import {DataCoder}            from './DataCoder';
-import {isArray, isObject}    from '@osmium/is';
-import {gzipSync, gunzipSync} from 'fflate';
+import {iterateSync}                   from '@osmium/iterate';
+import {CoderTools}                    from './CoderTools';
+import {DataCoder}                     from './DataCoder';
+import {isArray, isFunction, isObject} from '@osmium/is';
+
+interface SerializerPacketCompressor {
+	compress(data: Buffer | Uint8Array): Buffer;
+
+	decompress(data: Buffer): Buffer;
+}
 
 interface SerializerPacketOptions {
-	useCompress: boolean;
+	useCompress: SerializerPacketCompressor | null;
 	useCRC32: boolean;
 	useSchema?: boolean;
 }
@@ -28,14 +33,15 @@ export class Serializer {
 	private compressionLengthThreshold = 1024;
 
 	coder: DataCoder;
+	private enableCompression: boolean = false;
 	private readonly options: SerializerPacketOptions;
 	private schemes: SerializerSchemes = {};
 
 	constructor(coder?: DataCoder, options: SerializerPacketOptions = {
-		useCompress: true,
+		useCompress: null,
 		useCRC32   : true
 	}) {
-		this.coder = !!coder ? coder : new DataCoder();
+		this.coder = coder ? coder : new DataCoder();
 		this.options = options;
 	}
 
@@ -44,20 +50,24 @@ export class Serializer {
 			config.useSchema = true;
 		}
 
-		if (config.useCompress) {
-			config.useCompress = data.length >= this.compressionLengthThreshold;
+		const useCompress = config.useCompress;
+
+		if (isFunction(useCompress?.compress) && isFunction(useCompress?.decompress)) {
+			this.enableCompression = data.length >= this.compressionLengthThreshold;
 		}
 
 		const packet: Array<Buffer | Uint8Array> = [
 			CoderTools.int8UToBuf(this.version),
 			CoderTools.binFlagsToBuf([
-				config.useCompress,
+				this.enableCompression,
 				config.useCRC32,
 				!!config.useSchema
 			])
 		];
 
-		const outData = config.useCompress ? gzipSync(data) : data;
+		const outData = (this.enableCompression && config.useCompress?.compress)
+		                ? config.useCompress?.compress(data)
+		                : data;
 
 		if (config.useCRC32) {
 			packet.push(CoderTools.int32UToBuf(CoderTools.crc32(outData)));
@@ -174,7 +184,12 @@ export class Serializer {
 		}
 
 		if (useCompress) {
-			payload = Buffer.from(gunzipSync(payload));
+			const decompressor = this.options.useCompress?.decompress;
+			if (!decompressor || !isFunction(decompressor)) {
+				throw new Error('Packet compressed, but compressor plugin not user');
+			}
+
+			payload = Buffer.from(decompressor(payload));
 		}
 
 		let decodedPayload = this.coder.decode(payload);

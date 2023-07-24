@@ -4,7 +4,7 @@ const path = require('path');
 module.exports = {
 	mode       : 'production',
 	entry      : {
-		main: './src/index.ts',
+		main: './src/index.ts'
 
 	},
 	output     : {
@@ -16,8 +16,6 @@ module.exports = {
 		extensions: ['.ts', '.js'],
 		fallback  : {
 			buffer: require.resolve('buffer'),
-			crypto: require.resolve('crypto-browserify'),
-			stream: require.resolve('stream-browserify')
 		}
 	},
 	module     : {
@@ -30,11 +28,11 @@ module.exports = {
 	},
 	plugins    : [
 		new webpack.ProvidePlugin({
-			Buffer: ['buffer', 'Buffer'],
-		}),
+			Buffer: ['buffer', 'Buffer']
+		})
 	],
 	performance: {
 		maxEntrypointSize: 700000,
 		maxAssetSize     : 700000
-	},
+	}
 };

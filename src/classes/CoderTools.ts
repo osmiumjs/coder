@@ -1,8 +1,7 @@
 import {iterateSync}    from '@osmium/iterate';
 import {base32, base64} from '../lib/rfc4648';
-
-const crc32 = require('../lib/crc/crc32');
 import BaseX            from '../lib/base-x/index';
+import crc32            from '../lib/crc/crc32';
 
 export class CoderTools {
 	static BASE_ALPHABETS = {
@@ -14,13 +13,13 @@ export class CoderTools {
 	};
 
 	static isBuffer(what: any): boolean {
-		if (what instanceof Uint8Array) return true;
-		return Buffer.isBuffer(what);
+		return what instanceof Uint8Array ? true : Buffer.isBuffer(what);
 	}
 
 	static makeWBuffer(cb: (arg: Buffer) => void, length: number): Buffer {
 		const buf = Buffer.alloc(length);
 		cb(buf);
+
 		return buf;
 	}
 
@@ -105,14 +104,17 @@ export class CoderTools {
 
 	static twoInt32toInt53(val: [number, number]): number {
 		const buffer = new ArrayBuffer(8);
+
 		(new Uint32Array(buffer))[0] = val[0];
 		(new Uint32Array(buffer))[1] = val[1];
+
 		return new Float64Array(buffer)[0];
 	}
 
 	static int53toTwoInt32(val: number): [number, number] {
 		const buf = new ArrayBuffer(8);
 		(new Float64Array(buf))[0] = val;
+
 		return [(new Uint32Array(buf))[0], (new Uint32Array(buf))[1]];
 	}
 
@@ -194,6 +196,7 @@ export class CoderTools {
 
 	static bufToBinFlags(buf: Buffer | number, offset: number = 0): Array<boolean> {
 		const data = Buffer.isBuffer(buf) ? this.bufToInt8U(buf, offset).toString(2) : buf;
+
 		return this.pad(data).split('').map(r => r === '1');
 	}
 

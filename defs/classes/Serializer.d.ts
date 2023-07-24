@@ -1,7 +1,11 @@
 /// <reference types="node" />
 import { DataCoder } from './DataCoder';
+interface SerializerPacketCompressor {
+    compress(data: Buffer | Uint8Array): Buffer;
+    decompress(data: Buffer): Buffer;
+}
 interface SerializerPacketOptions {
-    useCompress: boolean;
+    useCompress: SerializerPacketCompressor | null;
     useCRC32: boolean;
     useSchema?: boolean;
 }
@@ -15,6 +19,7 @@ export declare class Serializer {
     readonly version: number;
     private compressionLengthThreshold;
     coder: DataCoder;
+    private enableCompression;
     private readonly options;
     private schemes;
     constructor(coder?: DataCoder, options?: SerializerPacketOptions);
