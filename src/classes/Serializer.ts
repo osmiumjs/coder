@@ -1,7 +1,8 @@
-import {iterateSync}                   from '@osmium/iterate';
-import {CoderTools}                    from './CoderTools';
-import {DataCoder}                     from './DataCoder';
 import {isArray, isFunction, isObject} from '@osmium/is';
+import {iterateSync}                   from '@osmium/iterate';
+
+import {DataCoder}  from './DataCoder';
+import {CoderTools} from './CoderTools';
 
 interface SerializerPacketCompressor {
 	compress(data: Buffer | Uint8Array): Buffer;
@@ -41,7 +42,7 @@ export class Serializer {
 		useCompress: null,
 		useCRC32   : true
 	}) {
-		this.coder = coder ? coder : new DataCoder();
+		this.coder = coder ?? new DataCoder();
 		this.options = options;
 	}
 

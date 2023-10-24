@@ -5,7 +5,7 @@ export class DataCoder {
 	private packr: Packr;
 
 	constructor(options: Options = {}, packrInstance: Packr | null = null) {
-		const instanceOptions: Options = Object.assign({
+		const instanceOptions: Options = {
 			encodeUndefinedAsNil: false,
 			largeBigIntToFloat  : false,
 			structuredClone     : true,
@@ -13,13 +13,13 @@ export class DataCoder {
 			mapsAsObjects       : false,
 			copyBuffers         : false,
 			useTimestamp32      : false,
-			int64AsNumber       : false
-		}, options);
+			...options
+		};
 
 		this.use(201, Map, (v: Map<unknown, unknown>) => [...v.entries()], (v) => new Map(v));
 		this.use(202, Set, (v: Set<unknown>) => [...v.values()], (v) => new Set(v));
 
-		this.packr = packrInstance ? packrInstance : new Packr(instanceOptions);
+		this.packr = packrInstance ?? new Packr(instanceOptions);
 	}
 
 	use(type: number, Class: Function, encode: (arg: any) => any, decode: (arg: any) => any): void {
