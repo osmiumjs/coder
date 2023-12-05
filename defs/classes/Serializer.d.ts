@@ -30,6 +30,6 @@ export declare class Serializer {
     serialize<T extends {
         [key: string | number | symbol]: unknown;
     }>(payload: T, schemaIdOrSchemaObject?: SerializerSchemaIdOrSchemaObject): Buffer;
-    deserialize<T>(buf: Buffer | Uint8Array): T;
+    deserialize<T = unknown>(buf: Buffer | Uint8Array): T;
 }
 export {};

@@ -11,7 +11,7 @@ export declare class CoderTools {
     static makeWBuffer(cb: (arg: Buffer) => void, length: number): Buffer;
     static toBuffer(what: string | Buffer, ascii?: boolean): Buffer;
     static baseXEncode(what: string | Buffer, base: string, asAscii?: boolean): string;
-    static baseXDecode(what: string, base: string, asBuffer?: boolean, asAscii?: boolean): string | Buffer;
+    static baseXDecode(what: string, base: string, asBuffer?: boolean, asAscii?: boolean): CoderTools.Decodable;
     static base16Encode(what: string | Buffer, asAscii?: boolean): string;
     static base32Encode(what: string | Buffer, asAscii?: boolean): string;
     static base36Encode(what: string | Buffer, asAscii?: boolean): string;
@@ -19,13 +19,13 @@ export declare class CoderTools {
     static base62Encode(what: string | Buffer, asAscii?: boolean): string;
     static base64Encode(what: string | Buffer, asAscii?: boolean): string;
     static base66Encode(what: string | Buffer, asAscii?: boolean): string;
-    static base16Decode(what: string, asBuffer?: boolean, asAscii?: boolean): string | Buffer;
-    static base32Decode(what: string, asBuffer?: boolean, asAscii?: boolean): string | Buffer | Uint8Array;
-    static base36Decode(what: string, asBuffer?: boolean, asAscii?: boolean): string | Buffer;
-    static base58Decode(what: string, asBuffer?: boolean, asAscii?: boolean): string | Buffer | Uint8Array;
-    static base62Decode(what: string, asBuffer?: boolean, asAscii?: boolean): string | Buffer;
-    static base64Decode(what: string, asBuffer?: boolean, asAscii?: boolean): string | Buffer | Uint8Array;
-    static base66Decode(what: string, asBuffer?: boolean, asAscii?: boolean): string | Buffer;
+    static base16Decode(what: string, asBuffer?: boolean, asAscii?: boolean): CoderTools.Decodable;
+    static base32Decode(what: string, asBuffer?: boolean, asAscii?: boolean): CoderTools.Decodable;
+    static base36Decode(what: string, asBuffer?: boolean, asAscii?: boolean): CoderTools.Decodable;
+    static base58Decode(what: string, asBuffer?: boolean, asAscii?: boolean): CoderTools.Decodable;
+    static base62Decode(what: string, asBuffer?: boolean, asAscii?: boolean): CoderTools.Decodable;
+    static base64Decode(what: string, asBuffer?: boolean, asAscii?: boolean): CoderTools.Decodable;
+    static base66Decode(what: string, asBuffer?: boolean, asAscii?: boolean): CoderTools.Decodable;
     static twoInt32toInt53(val: [number, number]): number;
     static int53toTwoInt32(val: number): [number, number];
     static intToBuf(int: number, len?: number, be?: boolean): Buffer;
@@ -51,4 +51,7 @@ export declare class CoderTools {
     static binFlagsToBuf(arr: Array<boolean>): Buffer;
     static hexToBinStr(val: string): string;
     static crc32(data: Buffer | Uint8Array | string, previous?: number): number;
+}
+export declare namespace CoderTools {
+    type Decodable = string | Buffer | Uint8Array;
 }

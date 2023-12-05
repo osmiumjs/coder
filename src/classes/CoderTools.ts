@@ -33,7 +33,7 @@ export class CoderTools {
 		return BaseX(base).encode(this.toBuffer(what, asAscii));
 	}
 
-	static baseXDecode(what: string, base: string, asBuffer = false, asAscii = false): string | Buffer {
+	static baseXDecode(what: string, base: string, asBuffer = false, asAscii = false): CoderTools.Decodable {
 		const b = BaseX(base).decode(what);
 		const encoding = asAscii ? 'ascii' : 'utf8';
 
@@ -68,37 +68,37 @@ export class CoderTools {
 		return this.baseXEncode(what, this.BASE_ALPHABETS.BASE66, asAscii);
 	}
 
-	static base16Decode(what: string, asBuffer = false, asAscii = false): string | Buffer {
+	static base16Decode(what: string, asBuffer = false, asAscii = false): CoderTools.Decodable {
 		return this.baseXDecode(what, this.BASE_ALPHABETS.BASE16, asBuffer, asAscii);
 	}
 
-	static base32Decode(what: string, asBuffer = false, asAscii = false): string | Buffer | Uint8Array {
+	static base32Decode(what: string, asBuffer = false, asAscii = false): CoderTools.Decodable {
 		const result = base32.parse(what, {loose: true});
 		const encoding = asAscii ? 'ascii' : 'utf8';
 
 		return asBuffer ? result : Buffer.from(result).toString(encoding);
 	}
 
-	static base36Decode(what: string, asBuffer = false, asAscii = false): string | Buffer {
+	static base36Decode(what: string, asBuffer = false, asAscii = false): CoderTools.Decodable {
 		return this.baseXDecode(what, this.BASE_ALPHABETS.BASE36, asBuffer, asAscii);
 	}
 
-	static base58Decode(what: string, asBuffer = false, asAscii = false): string | Buffer | Uint8Array {
+	static base58Decode(what: string, asBuffer = false, asAscii = false): CoderTools.Decodable {
 		return this.baseXDecode(what, this.BASE_ALPHABETS.BASE58, asBuffer, asAscii);
 	}
 
-	static base62Decode(what: string, asBuffer = false, asAscii = false): string | Buffer {
+	static base62Decode(what: string, asBuffer = false, asAscii = false): CoderTools.Decodable {
 		return this.baseXDecode(what, this.BASE_ALPHABETS.BASE62, asBuffer, asAscii);
 	}
 
-	static base64Decode(what: string, asBuffer = false, asAscii = false): string | Buffer | Uint8Array {
+	static base64Decode(what: string, asBuffer = false, asAscii = false): CoderTools.Decodable {
 		const result = base64.parse(what, {loose: true});
 		const encoding = asAscii ? 'ascii' : 'utf8';
 
 		return asBuffer ? result : Buffer.from(result).toString(encoding);
 	}
 
-	static base66Decode(what: string, asBuffer = false, asAscii = false): string | Buffer {
+	static base66Decode(what: string, asBuffer = false, asAscii = false): CoderTools.Decodable {
 		return this.baseXDecode(what, this.BASE_ALPHABETS.BASE66, asBuffer, asAscii);
 	}
 
@@ -211,10 +211,14 @@ export class CoderTools {
 		let i = 0, l = val.length - 1, bytes = [];
 		for (i; i < l; i += 2) bytes.push(parseInt(val.substring(i, 2), 16));
 
-		return String.fromCharCode.apply(String, bytes);
+		return String.fromCharCode(...bytes);
 	}
 
 	static crc32(data: Buffer | Uint8Array | string, previous: number = 0): number {
 		return crc32(data, previous);
 	}
+}
+
+export namespace CoderTools {
+	export type Decodable = string | Buffer | Uint8Array;
 }

@@ -145,8 +145,7 @@ export class Serializer {
 		return this.makePacket(this.options, out, schema?.id || null);
 	}
 
-	deserialize<T>(buf: Buffer | Uint8Array): T
-	deserialize(buf: Buffer | Uint8Array): any {
+	deserialize<T = unknown>(buf: Buffer | Uint8Array): T {
 		const buffer = Buffer.from(buf);
 
 		const version = CoderTools.bufToInt8U(buffer, 0);
@@ -209,6 +208,6 @@ export class Serializer {
 			}, {});
 		}
 
-		return decodedPayload;
+		return decodedPayload as T;
 	}
 }
