@@ -6,6 +6,7 @@ export declare class CoderTools {
         BASE58: string;
         BASE62: string;
         BASE66: string;
+        BASE93: string;
     };
     static isBuffer(what: any): boolean;
     static makeWBuffer(cb: (arg: Buffer) => void, length: number): Buffer;
@@ -19,6 +20,7 @@ export declare class CoderTools {
     static base62Encode(what: string | Buffer, asAscii?: boolean): string;
     static base64Encode(what: string | Buffer, asAscii?: boolean): string;
     static base66Encode(what: string | Buffer, asAscii?: boolean): string;
+    static base93Encode(what: string | Buffer, asAscii?: boolean): string;
     static base16Decode(what: string, asBuffer?: boolean, asAscii?: boolean): CoderTools.Decodable;
     static base32Decode(what: string, asBuffer?: boolean, asAscii?: boolean): CoderTools.Decodable;
     static base36Decode(what: string, asBuffer?: boolean, asAscii?: boolean): CoderTools.Decodable;
@@ -26,6 +28,7 @@ export declare class CoderTools {
     static base62Decode(what: string, asBuffer?: boolean, asAscii?: boolean): CoderTools.Decodable;
     static base64Decode(what: string, asBuffer?: boolean, asAscii?: boolean): CoderTools.Decodable;
     static base66Decode(what: string, asBuffer?: boolean, asAscii?: boolean): CoderTools.Decodable;
+    static base93Decode(what: string, asBuffer?: boolean, asAscii?: boolean): CoderTools.Decodable;
     static twoInt32toInt53(val: [number, number]): number;
     static int53toTwoInt32(val: number): [number, number];
     static intToBuf(int: number, len?: number, be?: boolean): Buffer;

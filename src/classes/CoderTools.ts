@@ -9,7 +9,8 @@ export class CoderTools {
 		BASE36: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ',
 		BASE58: '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz',
 		BASE62: '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ',
-		BASE66: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.!~'
+		BASE66: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.!~',
+		BASE93: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!"#$%&\'()*+,-./:;<>?@[\\]^_`{|}~'
 	};
 
 	static isBuffer(what: any): boolean {
@@ -68,6 +69,10 @@ export class CoderTools {
 		return this.baseXEncode(what, this.BASE_ALPHABETS.BASE66, asAscii);
 	}
 
+	static base93Encode(what: string | Buffer, asAscii = false): string {
+		return this.baseXEncode(what, this.BASE_ALPHABETS.BASE93, asAscii);
+	}
+
 	static base16Decode(what: string, asBuffer = false, asAscii = false): CoderTools.Decodable {
 		return this.baseXDecode(what, this.BASE_ALPHABETS.BASE16, asBuffer, asAscii);
 	}
@@ -100,6 +105,10 @@ export class CoderTools {
 
 	static base66Decode(what: string, asBuffer = false, asAscii = false): CoderTools.Decodable {
 		return this.baseXDecode(what, this.BASE_ALPHABETS.BASE66, asBuffer, asAscii);
+	}
+
+	static base93Decode(what: string, asBuffer = false, asAscii = false): CoderTools.Decodable {
+		return this.baseXDecode(what, this.BASE_ALPHABETS.BASE93, asBuffer, asAscii);
 	}
 
 	static twoInt32toInt53(val: [number, number]): number {

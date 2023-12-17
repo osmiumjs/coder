@@ -345,6 +345,11 @@ function doTests(coderName, title) {
 					expect(CoderTools.base66Encode(testStr)).to.equal('FRBg8olLsIcAKxdYJVo1~TM!5RTs');
 					expect(CoderTools.base66Decode(CoderTools.base66Encode(testStr))).to.equal(testStr);
 				});
+
+				it('base93 encode/decode', function () {
+					expect(CoderTools.base93Encode(testStr)).to.equal('Gt;nkh"jWV7]?$]pt11\\HWb0`K');
+					expect(CoderTools.base93Decode(CoderTools.base93Encode(testStr))).to.equal(testStr);
+				});
 			});
 		});
 	});
