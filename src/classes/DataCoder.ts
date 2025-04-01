@@ -16,8 +16,8 @@ export class DataCoder {
 			...options
 		};
 
-		this.use(201, Map, (v: Map<unknown, unknown>) => [...v.entries()], (v) => new Map(v));
-		this.use(202, Set, (v: Set<unknown>) => [...v.values()], (v) => new Set(v));
+		this.use(0x01, Map, (v: Map<unknown, unknown>) => [...v.entries()], (v) => new Map(v));
+		this.use(0x02, Set, (v: Set<unknown>) => [...v.values()], (v) => new Set(v));
 
 		this.packr = packrInstance ?? new Packr(instanceOptions);
 	}

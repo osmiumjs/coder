@@ -1,4 +1,3 @@
-/// <reference types="node" />
 import { Packr } from 'msgpackr';
 import { Options } from 'msgpackr/unpack';
 export declare class DataCoder {

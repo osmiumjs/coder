@@ -90,7 +90,7 @@ export class Serializer {
 	registerSchema<T>(id: number, fields: T): void
 	registerSchema(id: number, fields: SerializerSchema): void {
 		if (this.schemes[id]) {
-			throw new Error('Schema id alerady registred');
+			throw new Error(`Schema with id ${id} already registered`);
 		}
 
 		fields.sort((a, b) => a.localeCompare(b));
@@ -102,11 +102,11 @@ export class Serializer {
 		delete this.schemes[id];
 	}
 
-	serialize<T extends { [key: string | number | symbol]: unknown }>(payload: T, schemaIdOrSchemaObject: SerializerSchemaIdOrSchemaObject = null): Buffer {
+	serialize<T extends Record<string | number | symbol, unknown>>(payload: T, schemaIdOrSchemaObject: SerializerSchemaIdOrSchemaObject = null): Buffer {
 		let schema: SerializerSchemaIdOrSchemaObject = null;
 
 		if (!isObject(payload)) {
-			throw new Error('Payload is not Object, cant process');
+			throw new Error('Payload must be an object');
 		}
 
 		if (schemaIdOrSchemaObject === null) {

@@ -1,9 +1,4 @@
-declare function _exports(buf: any, previous: any): number;
-declare namespace _exports {
-    export { calc as signed };
-    export { fn as unsigned };
-    export { model };
+export declare class CRC32 {
+    private static table;
+    static calc(data: string | Uint8Array): number;
 }
-export = _exports;
-declare function fn(buf: any, previous: any): number;
-declare namespace fn { }

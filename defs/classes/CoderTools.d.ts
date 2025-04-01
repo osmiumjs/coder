@@ -1,4 +1,3 @@
-/// <reference types="node" />
 export declare class CoderTools {
     static BASE_ALPHABETS: {
         BASE16: string;
@@ -53,7 +52,8 @@ export declare class CoderTools {
     static bufToBinFlags(buf: Buffer | number, offset?: number): Array<boolean>;
     static binFlagsToBuf(arr: Array<boolean>): Buffer;
     static hexToBinStr(val: string): string;
-    static crc32(data: Buffer | Uint8Array | string, previous?: number): number;
+    static hexToBytes(val: string): Uint8Array;
+    static crc32(data: Buffer | Uint8Array | string): number;
 }
 export declare namespace CoderTools {
     type Decodable = string | Buffer | Uint8Array;

@@ -1,7 +1,7 @@
 import {iterateSync}    from '@osmium/iterate';
 import {base32, base64} from '../lib/rfc4648';
 import BaseX            from '../lib/base-x/index';
-import crc32            from '../lib/crc/crc32';
+import {CRC32}          from '../lib/crc/crc32';
 
 export class CoderTools {
 	static BASE_ALPHABETS = {
@@ -14,7 +14,7 @@ export class CoderTools {
 	};
 
 	static isBuffer(what: any): boolean {
-		return what instanceof Uint8Array ? true : Buffer.isBuffer(what);
+		return what instanceof Uint8Array || Buffer.isBuffer(what);
 	}
 
 	static makeWBuffer(cb: (arg: Buffer) => void, length: number): Buffer {
@@ -223,8 +223,17 @@ export class CoderTools {
 		return String.fromCharCode(...bytes);
 	}
 
-	static crc32(data: Buffer | Uint8Array | string, previous: number = 0): number {
-		return crc32(data, previous);
+	static hexToBytes(val: string): Uint8Array {
+		const bytes = [];
+		for (let i = 0; i < val.length; i += 2) {
+			bytes.push(parseInt(val.substring(i, i + 2), 16));
+		}
+
+		return new Uint8Array(bytes);
+	}
+
+	static crc32(data: Buffer | Uint8Array | string): number {
+		return CRC32.calc(data);
 	}
 }
 

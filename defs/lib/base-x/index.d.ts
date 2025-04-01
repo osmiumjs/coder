@@ -1,4 +1,3 @@
-/// <reference types="node" />
 declare function base(ALPHABET: string): base.BaseConverter;
 export default base;
 declare namespace base {

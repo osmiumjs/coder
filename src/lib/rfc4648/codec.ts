@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/strict-boolean-expressions */
+
 export interface Encoding {
 	bits: number;
 	chars: string;
