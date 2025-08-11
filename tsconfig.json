@@ -28,7 +28,7 @@
 		"strict"                          : true,
 		"strictBindCallApply"             : true,
 		"strictNullChecks"                : true,
-		"types"                           : ["mocha", "node"]
+		"types"                           : ["node"]
 	},
 	"include"        : [
 		"./src/**/*"

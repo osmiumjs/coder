@@ -1,10 +1,62 @@
-/package-lock.json
-/node_modules
-/.idea
-/test.js
-/test2.js
-/.clinic
-/data.js
-/test.ts
-/test2.ts
-/test3.ts
+# Source files (we publish built JS + type defs only)
+src/
+tests/
+
+# Development and build configuration
+webpack.config.js
+vitest.config.*
+tsconfig.json
+.eslintrc*
+.prettier*
+.editorconfig
+
+# IDE and editor files
+.vscode/
+.idea/
+.qodo/
+
+# Coverage and testing
+coverage/
+.nyc_output/
+test-results/
+
+# Node and package manager
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.pnpm-store/
+
+# Git files
+.git/
+.gitignore
+.gitattributes
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Temporary files
+*.log
+*.tmp
+/tmp/
+.cache/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Development summary files
+EXAMPLES_SUMMARY.md
+TESTING.md
+
+# Keep these files in the package:
+# - dist/ (built JavaScript)
+# - defs/ (TypeScript definitions)
+# - README.md (documentation)
+# - LICENSE (license)
+# - COVERAGE.md (coverage report)
+# - docs/ (documentation)
+# - examples/ (usage examples)

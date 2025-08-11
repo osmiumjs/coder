@@ -1,11 +1,49 @@
-/dist
-/package-lock.json
-/node_modules
-/.idea
-/test.js
-/test2.js
-/.clinic
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+package-lock.json
+
+# Build outputs
+/dist/
+/defs/
+/coverage/
+*.tsbuildinfo
+
+# Editors/IDE
+.vscode/
+.idea/
+*.iml
+
+# System (Windows/macOS)
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# Env files
+.env
+.env.local
+.env.*.local
+
+# Tooling / caches
+.clinic/
+.qodo/
+.vitest/
+.vite/
+.cache/
+
+# Tests and temp artifacts
+/tests-output/
+/tmp/
+*.tmp
+*.log
+
+# Project-specific transient files
 /data.js
 /test.ts
 /test2.ts
 /test3.ts
+/test.js
+/test2.js

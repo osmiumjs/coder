@@ -1,8 +1,7 @@
-const _Buffer = require('buffer').Buffer;
-
-import {CoderTools} from './classes/CoderTools';
-import {DataCoder}  from './classes/DataCoder';
-import {Serializer} from './classes/Serializer';
+import {Buffer as _Buffer} from 'buffer';
+import {CoderTools}        from './classes/CoderTools';
+import {DataCoder}         from './classes/DataCoder';
+import {Serializer}        from './classes/Serializer';
 
 export {Options} from 'msgpackr/unpack';
 
